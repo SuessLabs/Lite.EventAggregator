@@ -44,10 +44,12 @@ If you store strong references to handlers, subscribers will never be collected.
 
 ### v0.8.0
 
-Evolved the Event Aggregator to support async, bidirectional request/response, and pluggable IPC transports via Named Pipes, Memory-Mapped Files, and TCP/IP Sockets.
+Evolved the Event Aggregator to support **async**, **bidirectional** request/response, and **pluggable IPC transports** via Named Pipes, Memory-Mapped Files, and TCP/IP Sockets.
 This design preserves your weak-reference handlers, remains DI-friendly, and keeps publishers decoupled from subscribers and transport mechanics.
 
-> **Note:** The implementation intentionally straightforward. Not for production at this time as it needs robust error handling, retries, backpressure, queueing, auth/ACLs, and schema versioning.
+> **Note:**
+> 1. The implementation intentionally straightforward. Not for production at this time as it needs robust error handling, retries, backpressure, queueing, auth/ACLs, and schema versioning.
+> 2. Consider bringing back `SendAsync<TEvent>(..)` and `StartAsync<TEvent>(..)` along side the new `IEventTransport` bi-directional sender/receivers.
 
 * **`EventAggregator` (DI singleton):**
   * `PublishAsync<TEvent>(TEvent eventData)`
