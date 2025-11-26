@@ -10,26 +10,11 @@ namespace Lite.EventAggregator;
 public class EventAggregator : IEventAggregator
 {
   private readonly ConcurrentDictionary<Type, List<WeakReference>> _subscribers = new();
+  private IEventTransport? _transport;
 
-  public void Subscribe<TEvent>(Action<TEvent> handler)
+  public void EnableIpc(IEventTransport transport)
   {
-    var eventType = typeof(TEvent);
-    var weakHandler = new WeakReference(handler);
-
-    _subscribers.AddOrUpdate(eventType,
-      _ => new List<WeakReference> { weakHandler },
-      (_, handlers) =>
-      {
-        handlers.Add(weakHandler);
-        return handlers;
-      });
-  }
-
-  public void Unsubscribe<TEvent>(Action<TEvent> handler)
-  {
-    var eventType = typeof(TEvent);
-    if (_subscribers.TryGetValue(eventType, out var handlers))
-      handlers.RemoveAll(wr => wr.Target is Action<TEvent> h && h == handler);
+    _transport = transport;
   }
 
   public void Publish<TEvent>(TEvent eventData)
@@ -47,9 +32,35 @@ public class EventAggregator : IEventAggregator
           deadRefs.Add(weakRef);
       }
 
-      // Clean up dead references
       foreach (var dead in deadRefs)
         handlers.Remove(dead);
     }
+
+    // Send to IPC transport if enabled
+    _transport?.Send(eventData);
+  }
+
+  public void Subscribe<TEvent>(Action<TEvent> handler)
+  {
+    var eventType = typeof(TEvent);
+    var weakHandler = new WeakReference(handler);
+
+    _subscribers.AddOrUpdate(eventType,
+      _ => new List<WeakReference> { weakHandler },
+      (_, handlers) =>
+      {
+        handlers.Add(weakHandler);
+        return handlers;
+      });
+
+    // If IPC is enabled, start listening for remote events
+    _transport?.StartListening<TEvent>(handler);
+  }
+
+  public void Unsubscribe<TEvent>(Action<TEvent> handler)
+  {
+    var eventType = typeof(TEvent);
+    if (_subscribers.TryGetValue(eventType, out var handlers))
+      handlers.RemoveAll(wr => wr.Target is Action<TEvent> h && h == handler);
   }
 }

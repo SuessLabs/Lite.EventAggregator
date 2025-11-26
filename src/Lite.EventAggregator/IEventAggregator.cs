@@ -12,4 +12,8 @@ public interface IEventAggregator
   void Subscribe<TEvent>(Action<TEvent> handler);
 
   void Unsubscribe<TEvent>(Action<TEvent> handler);
+
+  /// <summary>Option to include IPC support.</summary>
+  /// <param name="transport">IPC transportation mechanism.</param>
+  void EnableIpc(IEventTransport transport);
 }
