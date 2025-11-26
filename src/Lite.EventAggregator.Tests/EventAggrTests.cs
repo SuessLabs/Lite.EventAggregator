@@ -14,7 +14,7 @@ public sealed class EventAggrTests
   {
     bool received = false;
 
-    IEventAggregator eventAggregator = new EventAggregator();
+    var eventAggregator = new EventAggregator();
 
     // Subscribe
     eventAggregator.Subscribe<UserCreatedEvent>(e =>
