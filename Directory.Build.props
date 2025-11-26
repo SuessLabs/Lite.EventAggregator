@@ -1,0 +1,33 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+
+    <BaseOutputPath>..\output\$(MSBuildProjectName)</BaseOutputPath>
+    <Deterministic>true</Deterministic>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages> <!-- Excludes all satellite assemblies -->
+
+    <Company>Xeno Innovations, Inc.</Company>
+    <Copyright>Copyright 2025 Xeno Innovations, Inc.</Copyright>
+    <Authors>Damian Suess</Authors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="StyleCop.Analyzers.Unstable">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Detect stylecop analyzers-->
+    <AdditionalFiles Include="../stylecop.json" />
+    <!-- https://github.com/dotnet/roslyn/blob/main/src/RoslynAnalyzers/Microsoft.CodeAnalysis.BannedApiAnalyzers/BannedApiAnalyzers.Help.md -->
+    <None Remove="../BannedSymbols.txt" />
+    <AdditionalFiles Include="../BannedSymbols.txt" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,1 @@
+N:System.Linq;Do not use System.Linq, as operations may not be AOT-friendly, slower, or difficult to debug.
