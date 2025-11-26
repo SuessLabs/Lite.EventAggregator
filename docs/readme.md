@@ -1,1 +1,0 @@
-The Event Aggregator service in C# pattern is useful for decoupling publishers and subscribers in an application.
