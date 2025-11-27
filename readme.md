@@ -65,6 +65,17 @@ This design preserves your weak-reference handlers, remains DI-friendly, and kee
   * `MemoryMappedTransport` _(two MMFs + named EventWaitHandles for request/response signals)_
   * `TcpTransport` _(two ports—one for requests, one for responses—with length-prefix framing)_
 
+#### Future Improvements
+
+* **Reliability:** Durable queues, consider MSMQ/Service Bus/RabbitMQ/Kafka depending on needs. (Out of scope for this lightweight first-pass.)
+* **Security:** Named Pipes can use ACLs; TCP needs TLS + auth; MMFs need OS ACLs. Add validation and schema versioning (i.e., `EventEnvelope`).
+* **Backpressure & Flow Control:** Implement bounded queues, retry, and exponential backoff where applicable.
+* **Type Resolution:** `AssemblyQualifiedName` assumes shared assemblies across processes. Consider a type registry or message contracts package shared by both sides.
+* **Framing:** Length-prefix framing prevents stream-boundary issues; keep consistent across transports.
+* **Concurrency:** The Memory-Mapped example is single-slot; for multiple writers/readers, implement a ring buffer or per-message files + directory watcher.
+* Add cancellation-aware timeouts and retry policies.
+* Provide a full two-process demo (client & server) for each transport so you can run them separately and see request/response in action.
+
 ### v0.7.0
 
 Adds optional IPC transport mechanisms for inter-process communication (IPC) with **JSON serialization**. IPC can be integrated with the `IEventTransport` interface.
