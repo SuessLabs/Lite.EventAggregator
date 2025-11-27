@@ -2,7 +2,31 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <FileVersion>0.8.0.0</FileVersion>
+    <FileVersion>0.9.0.0</FileVersion>
   </PropertyGroup>
+
+
+  <PropertyGroup>
+    <!-- NuGet metadata -->
+    <PackageId>Lite.EventAggregator</PackageId>
+    <Version>0.9.0</Version>
+    <Authors>Damian Suess</Authors>
+    <Description>Async Event Aggregator with weak references, request/response, timeouts, and optional IPC transports (Named Pipes, Memory-Mapped Files, TCP).</Description>
+    <RepositoryUrl>https://github.com/SuessLabs/Lite.EventAggregator</RepositoryUrl>
+    <PackageTags>event-aggregator;ipc;named-pipes;tcp;memory-mapped;pubsub;request-response</PackageTags>
+    <PackageLicenseExpression>Apache-2</PackageLicenseExpression>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Title>Lite.EventAggregator</Title>
+    <PackageProjectUrl>https://github.com/SuessLabs/Lite.EventAggregator</PackageProjectUrl>
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <None Include="..\..\readme.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>
