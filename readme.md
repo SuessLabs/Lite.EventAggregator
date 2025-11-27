@@ -54,6 +54,8 @@ If you store strong references to handlers, subscribers will never be collected.
 
 * Removed relyance on reflection
 * IPC Transport timeouts for 'Envelope' (receipted) messages
+* Added ability for local event timeouts.
+  * This can happen when there are no subscribers, but you expect there to be one. Previously this was only available for "receipted" IPC transports.
 
 ### v0.9.0
 
@@ -65,7 +67,7 @@ If you store strong references to handlers, subscribers will never be collected.
 * **Unit tests**
 * **Full working demos** (one per transport)
 
-* No reflection/linq path in handler dispatch—strongly-typed wrappers are used.
+* No reflection/linq path in handler dispatchï¿½strongly-typed wrappers are used.
 * Weak references to delegates to avoid leaks.
 * Timeout support via RequestAsync parameter (default 5s).
 * Length-prefixed framing across pipe/tcp; EventWaitHandle for MMF.
@@ -94,7 +96,7 @@ This design preserves your weak-reference handlers, remains DI-friendly, and kee
 * **Transports:**
   * `NamedPipeTransport` _(duplex via named server/client pipes + length-prefix framing)_
   * `MemoryMappedTransport` _(two MMFs + named EventWaitHandles for request/response signals)_
-  * `TcpTransport` _(two ports—one for requests, one for responses—with length-prefix framing)_
+  * `TcpTransport` _(two portsï¿½one for requests, one for responsesï¿½with length-prefix framing)_
 
 #### Future Improvements
 
@@ -130,3 +132,6 @@ Adds optional (one-way) IPC transport mechanisms for inter-process communication
 
 * Send IPC only for specified event types.
 * Possibly, filtering or priority-based dispatching.
+* Refactor `IEventTransport` to`IIpcEvent` for clarity.
+* Refactor `Transporter` namespace to `Ipc` or `IpcTransport` for clarity.
+* Refactor `IEventEnvelopeTransport` under `IpcReceipted` namespace for clarity.
