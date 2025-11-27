@@ -79,13 +79,19 @@ public class EventAggregator : IEventAggregator
   /// <remarks>Bi-directional transport only.</remarks>
   public async Task<TResponse> RequestAsync<TRequest, TResponse>(TRequest request, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
   {
-    // Try to find local event subscription handler first
+    // Try to find local event subscription handler first and exists
+    // NOTE: Consider separating IPC from local event request/response handling
     var local = GetFirstRequestHandler(typeof(TRequest));
-    if (local != null)
+    if (local is not null)
     {
       var r = await local.InvokeAsync(request).ConfigureAwait(false);
       return (TResponse)r!;
     }
+
+    // No local handler found or timeout, avoids sitting in a black hole
+    // TODO: Consider creating a custom Exception type for this scenario (there's a timeout ex below)
+    if (!_usingIpcTransport && timeout is null)
+      throw new TimeoutException("No IPC transport configured for request/response, and no local handler found.");
 
     if (_usingIpcTransport && _ipcEnvelopeTransport is null)
       throw new InvalidOperationException("No IPC transport configured for request/response.");
