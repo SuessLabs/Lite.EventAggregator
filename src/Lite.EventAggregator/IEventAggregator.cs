@@ -14,7 +14,7 @@ public interface IEventAggregator
   /// <param name="eventData">Event object.</param>
   /// <param name="cancellationToken">Cancellation token.</param>
   /// <returns>Task.</returns>
-  Task PublishEnvelopeAsync<TEvent>(TEvent eventData, CancellationToken cancellationToken = default);
+  Task PublishAsync<TEvent>(TEvent eventData, CancellationToken cancellationToken = default);
 
   /// <summary>Publishes the specified event to all registered subscribers.</summary>
   /// <remarks>
@@ -25,7 +25,7 @@ public interface IEventAggregator
   /// <param name="eventData">The event data to be published to subscribers. Cannot be null.</param>
   void Publish<TEvent>(TEvent eventData);
 
-  Task<TResponse> RequestAsync<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken = default);
+  Task<TResponse> RequestAsync<TRequest, TResponse>(TRequest request, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
   /// <summary>
   ///   Registers a handler to be invoked when an event of the specified type is published.

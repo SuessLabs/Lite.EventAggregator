@@ -2,7 +2,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Text;
@@ -30,6 +29,9 @@ namespace Lite.EventAggregator.Transporter;
 /// </remarks>
 public class NamedPipeEnvelopeTransport : IEventEnvelopeTransport
 {
+  /// <summary>Framing: 4-byte length prefix (little-endian).</summary>
+  private const int LengthPrefixSize = 4;
+
   /// <summary>Where this process listens for requests/publish.</summary>
   private readonly string _incomingPipeName;
 
@@ -50,11 +52,15 @@ public class NamedPipeEnvelopeTransport : IEventEnvelopeTransport
 
   public async Task SendAsync(EventEnvelope envelope, CancellationToken cancellationToken = default)
   {
+    const string ServerName = ".";
     var targetPipe = envelope.IsResponse && !string.IsNullOrEmpty(envelope.ReplyTo)
       ? envelope.ReplyTo!
       : _outgoingPipeName;
 
-    await ClientSendAsync(targetPipe, envelope, cancellationToken).ConfigureAwait(false);
+    using var client = new NamedPipeClientStream(ServerName, targetPipe, PipeDirection.Out, PipeOptions.Asynchronous);
+    await client.ConnectAsync(cancellationToken).ConfigureAwait(false);
+    await WriteEnvelopeAsync(client, envelope, cancellationToken).ConfigureAwait(false);
+    await client.FlushAsync(cancellationToken).ConfigureAwait(false);
   }
 
   public async Task StartAsync(Func<EventEnvelope, Task> onMessageAsync, CancellationToken cancellationToken = default)
@@ -65,23 +71,15 @@ public class NamedPipeEnvelopeTransport : IEventEnvelopeTransport
     await Task.CompletedTask;
   }
 
-  private static async Task ClientSendAsync(string pipeName, EventEnvelope envelope, CancellationToken ct)
-  {
-    using var client = new NamedPipeClientStream(".", pipeName, PipeDirection.Out, PipeOptions.Asynchronous);
-    await client.ConnectAsync(ct).ConfigureAwait(false);
-    await WriteEnvelopeAsync(client, envelope, ct).ConfigureAwait(false);
-    await client.FlushAsync(ct).ConfigureAwait(false);
-  }
-
   private static async Task<EventEnvelope?> ReadEnvelopeAsync(Stream stream, CancellationToken ct)
   {
-    var lenBuf = new byte[4];
-    var read = await stream.ReadAsync(lenBuf.AsMemory(0, 4), ct).ConfigureAwait(false);
+    var lenBuf = new byte[LengthPrefixSize];
+    var read = await stream.ReadAsync(lenBuf.AsMemory(0, LengthPrefixSize), ct).ConfigureAwait(false);
 
     if (read == 0)
       return null;
 
-    if (read < 4)
+    if (read < LengthPrefixSize)
       return null;
 
     var length = BitConverter.ToInt32(lenBuf, 0);
@@ -104,6 +102,11 @@ public class NamedPipeEnvelopeTransport : IEventEnvelopeTransport
     return JsonSerializer.Deserialize<EventEnvelope>(json);
   }
 
+  /// <summary>Read incoming payloads in a loop and invoke the callback.</summary>
+  /// <param name="pipeName">Pipe Name.</param>
+  /// <param name="onMessageAsync">Message handler.</param>
+  /// <param name="ct"><see cref="CancellationToken"/>.</param>
+  /// <returns>Task.</returns>
   private static async Task ServerLoopAsync(string pipeName, Func<EventEnvelope, Task> onMessageAsync, CancellationToken ct)
   {
     while (!ct.IsCancellationRequested)
@@ -120,18 +123,16 @@ public class NamedPipeEnvelopeTransport : IEventEnvelopeTransport
       try
       {
         // Read multiple messages on this connection
-        while (server.IsConnected && !ct.IsCancellationRequested)
-        {
-          var envelope = await ReadEnvelopeAsync(server, ct).ConfigureAwait(false);
-          if (envelope == null)
-            break;
-
+        ////while (server.IsConnected && !ct.IsCancellationRequested)
+        ////{
+        var envelope = await ReadEnvelopeAsync(server, ct).ConfigureAwait(false);
+        if (envelope is not null)
           await onMessageAsync(envelope).ConfigureAwait(false);
-        }
+        ////}
       }
       catch
       {
-        /* swallow for demo */
+        /* Swallow for until we add logging */
       }
       finally
       {

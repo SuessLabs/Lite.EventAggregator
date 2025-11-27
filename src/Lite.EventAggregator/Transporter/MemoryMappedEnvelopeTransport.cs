@@ -23,6 +23,7 @@ public class MemoryMappedEnvelopeTransport : IEventEnvelopeTransport
 {
   /// <summary>1MB buffer for beta.</summary>
   private const int DefaultBufferSize = 1 << 20;
+  private const int LengthPrefixSize = 4;
 
   private readonly int _bufferSize;
   private readonly string _requestMapName;
@@ -58,11 +59,11 @@ public class MemoryMappedEnvelopeTransport : IEventEnvelopeTransport
     var json = JsonSerializer.Serialize(envelope);
     var bytes = Encoding.UTF8.GetBytes(json);
 
-    if (bytes.Length + 4 > DefaultBufferSize)
+    if (bytes.Length + LengthPrefixSize > DefaultBufferSize)
       throw new InvalidOperationException("Payload too large for MMF buffer.");
 
     accessor.Write(0, bytes.Length);
-    accessor.WriteArray(4, bytes, 0, bytes.Length);
+    accessor.WriteArray(LengthPrefixSize, bytes, 0, bytes.Length);
 
     using var ev = new EventWaitHandle(false, EventResetMode.AutoReset, signalName);
     ev.Set();
@@ -96,11 +97,11 @@ public class MemoryMappedEnvelopeTransport : IEventEnvelopeTransport
         using var accessor = mmf.CreateViewAccessor();
         var length = accessor.ReadInt32(0);
 
-        if (length <= 0 || length > DefaultBufferSize - 4)
+        if (length <= 0 || length > DefaultBufferSize - LengthPrefixSize)
           continue;
 
         var buffer = new byte[length];
-        accessor.ReadArray(4, buffer, 0, length);
+        accessor.ReadArray(LengthPrefixSize, buffer, 0, length);
 
         var json = Encoding.UTF8.GetString(buffer);
         var envelope = JsonSerializer.Deserialize<EventEnvelope>(json);
@@ -110,7 +111,7 @@ public class MemoryMappedEnvelopeTransport : IEventEnvelopeTransport
       }
       catch
       {
-        /* swallow for demo */
+        /* swallow until we get logging */
       }
     }
   }

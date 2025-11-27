@@ -27,6 +27,9 @@ namespace Lite.EventAggregator.Transporter;
 /// </remarks>
 public class TcpEnvelopeTransport : IEventEnvelopeTransport
 {
+  /// <summary>Message framing: 4-byte length prefix + JSON.</summary>
+  private const int LengthPrefixSize = 4;
+
   private readonly IPEndPoint _replyListen;
 
   /// <summary>Where to send responses.</summary>
@@ -86,10 +89,8 @@ public class TcpEnvelopeTransport : IEventEnvelopeTransport
           while (!ct.IsCancellationRequested)
           {
             var envelope = await ReadEnvelopeAsync(s, ct).ConfigureAwait(false);
-            if (envelope == null)
-              break;
-
-            await onMessageAsync(envelope).ConfigureAwait(false);
+            if (envelope is not null)
+              await onMessageAsync(envelope).ConfigureAwait(false);
           }
         },
         ct);
@@ -97,7 +98,7 @@ public class TcpEnvelopeTransport : IEventEnvelopeTransport
     }
     catch
     {
-      /* swallow for demo */
+      /* swallow until we get logging */
     }
     finally
     {
@@ -113,13 +114,13 @@ public class TcpEnvelopeTransport : IEventEnvelopeTransport
 
   private static async Task<EventEnvelope?> ReadEnvelopeAsync(NetworkStream stream, CancellationToken ct)
   {
-    var lenBuf = new byte[4];
-    var read = await stream.ReadAsync(lenBuf.AsMemory(0, 4), ct).ConfigureAwait(false);
+    var lenBuf = new byte[LengthPrefixSize];
+    var read = await stream.ReadAsync(lenBuf.AsMemory(0, LengthPrefixSize), ct).ConfigureAwait(false);
 
     if (read == 0)
       return null;
 
-    if (read < 4)
+    if (read < LengthPrefixSize)
       return null;
 
     var length = BitConverter.ToInt32(lenBuf, 0);
@@ -132,6 +133,7 @@ public class TcpEnvelopeTransport : IEventEnvelopeTransport
 
       if (r == 0)
         break;
+
       total += r;
     }
 
@@ -148,7 +150,7 @@ public class TcpEnvelopeTransport : IEventEnvelopeTransport
     var bytes = Encoding.UTF8.GetBytes(json);
     var len = BitConverter.GetBytes(bytes.Length);
 
-    await stream.WriteAsync(len.AsMemory(0, 4), ct);
+    await stream.WriteAsync(len.AsMemory(0, LengthPrefixSize), ct);
     await stream.WriteAsync(bytes.AsMemory(), ct);
   }
 }

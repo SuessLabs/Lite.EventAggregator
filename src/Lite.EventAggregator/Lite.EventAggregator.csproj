@@ -1,15 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!--<TargetFramework>net8.0,net9.0,net10.0</TargetFramework>-->
     <TargetFramework>net10.0</TargetFramework>
-    <FileVersion>0.9.0.0</FileVersion>
+    <FileVersion>1.0.0</FileVersion>
   </PropertyGroup>
 
 
   <PropertyGroup>
     <!-- NuGet metadata -->
     <PackageId>Lite.EventAggregator</PackageId>
-    <Version>0.9.0</Version>
+    <Version>1.0.0</Version>
     <Authors>Damian Suess</Authors>
     <Description>Async Event Aggregator with weak references, request/response, timeouts, and optional IPC transports (Named Pipes, Memory-Mapped Files, TCP).</Description>
     <RepositoryUrl>https://github.com/SuessLabs/Lite.EventAggregator</RepositoryUrl>
@@ -27,6 +28,11 @@
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
   </ItemGroup>
 
 </Project>
