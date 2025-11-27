@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <FileVersion>0.6.0.0</FileVersion>
+    <FileVersion>0.8.0.0</FileVersion>
   </PropertyGroup>
 
 </Project>

@@ -5,15 +5,23 @@ using System;
 
 namespace Lite.EventAggregator;
 
+/// <summary>
+///   Bi-directional event transport interface used for sending and receiving event packages, AKA: "envelopes".
+/// </summary>
 public interface IEventTransport
 {
-  /// <summary>Send IPC event.</summary>
-  /// <typeparam name="TEvent">Event type.</typeparam>
-  /// <param name="eventData">Payload data.</param>
+  /// <summary>
+  ///   Send a message (request or response). If envelope.IsResponse == true and envelope.ReplyTo != null,
+  ///   transport sends to the reply channel; otherwise to its configured request channel.
+  /// </summary>
+  /// <typeparam name="TEvent">Type of event data.</typeparam>
+  /// <param name="eventData">Event data to send.</param>
   void Send<TEvent>(TEvent eventData);
 
-  /// <summary>Listen subscription for event.</summary>
-  /// <typeparam name="TEvent">Event type.</typeparam>
-  /// <param name="onEventReceived">Action when event is received.</param>
+  /// <summary>
+  ///   Start listening for both requests and responses (as applicable).
+  /// </summary>
+  /// <typeparam name="TEvent">Type of event data.</typeparam>
+  /// <param name="onEventReceived">Message handler.</param>
   void StartListening<TEvent>(Action<TEvent> onEventReceived);
 }
