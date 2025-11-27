@@ -52,6 +52,14 @@ If you store strong references to handlers, subscribers will never be collected.
 * **Unit tests**
 * **Full working demos** (one per transport)
 
+* No reflection/linq path in handler dispatch—strongly-typed wrappers are used.
+* Weak references to delegates to avoid leaks.
+* Timeout support via RequestAsync parameter (default 5s).
+* Length-prefixed framing across pipe/tcp; EventWaitHandle for MMF.
+* DI-friendly + hosted service to start transport automatically.
+* Unit tests for local, timeout, and each transport.
+* Portable across .NET 7/8.
+
 ### v0.8.0
 
 Evolved the Event Aggregator to support **async**, **bidirectional** request/response, and **pluggable IPC transports** via Named Pipes, Memory-Mapped Files, and TCP/IP Sockets.
