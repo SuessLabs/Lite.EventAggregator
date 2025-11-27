@@ -42,6 +42,16 @@ If you store strong references to handlers, subscribers will never be collected.
 
 ## History
 
+### v0.9.0
+
+* Async publish + request/response
+* **Strongly-typed** internal wrappers (no reflection & no System.Linq)
+* **Timeout support** in RequestAsync
+* **Three IPC transports** _(Named Pipes, Memory-Mapped Files, TCP/IP)_
+* DI extensions + hosted service
+* **Unit tests**
+* **Full working demos** (one per transport)
+
 ### v0.8.0
 
 Evolved the Event Aggregator to support **async**, **bidirectional** request/response, and **pluggable IPC transports** via Named Pipes, Memory-Mapped Files, and TCP/IP Sockets.
