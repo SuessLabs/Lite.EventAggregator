@@ -38,15 +38,21 @@ public class EventAggregator : IEventAggregator
   /// <inheritdoc/>
   public async Task PublishEnvelopeAsync<TEvent>(TEvent eventData, CancellationToken cancellationToken = default)
   {
+    // TODO: Combine with Publish<TEvent>, so we only need to maintain one.
     // Local dispatch
     DispatchEventLocal(eventData);
 
     // Remote dispatch
-    if (_ipcEnvelopeTransport != null)
+    if (_ipcEnvelopeTransport is not null)
     {
       var envelope = EventSerializer.Wrap(eventData, isRequest: false, replyTo: null);
       await _ipcEnvelopeTransport.SendAsync(envelope, cancellationToken);
     }
+    ////else if (_ipcTransport is not null)
+    ////{
+    ////  // Send to IPC transport if enabled
+    ////  _ipcTransport?.Send(eventData);
+    ////}
   }
 
   /// <inheritdoc/>
@@ -74,13 +80,14 @@ public class EventAggregator : IEventAggregator
   }
 
   /// <inheritdoc/>
+  /// <remarks>Bi-directional transport only.</remarks>
   public async Task<TResponse> RequestAsync<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken = default)
   {
     var correlationId = Guid.NewGuid().ToString("N");
     var tcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
     _pendingRequests[correlationId] = tcs;
 
-    // Local handlers (if any) – we invoke first; if handled locally, short-circuit (no IPC)
+    // Try local handlers first (if any) – we invoke first; if handled locally, short-circuit (no IPC)
     var localHandler = GetFirstRequestHandler<TRequest, TResponse>();
     if (localHandler != null)
     {
@@ -89,6 +96,7 @@ public class EventAggregator : IEventAggregator
       return localResponse;
     }
 
+    // NOTE: This method requires bi-directional transport
     if (_ipcEnvelopeTransport == null)
       throw new InvalidOperationException("No transport configured for request/response.");
 
@@ -150,15 +158,35 @@ public class EventAggregator : IEventAggregator
   {
     var eventType = typeof(TEvent);
     if (_eventSubscribers.TryGetValue(eventType, out var handlers))
-      handlers.RemoveAll(wr => wr.Target is Action<TEvent> h && h == handler);
+    {
+      //// handlers.RemoveAll(wr => wr.Target is Action<TEvent> h && h == handler);
+      for (int i = handlers.Count - 1; i >= 0; i--)
+      {
+        var target = handlers[i].Target;
+        if (target is Action<TEvent> existing && existing == handler)
+          handlers.RemoveAt(i);
+        else if (target is null)
+          handlers.RemoveAt(i); // cleanup dead refs
+      }
+    }
   }
 
   /// <inheritdoc/>
   public void UnsubscribeRequest<TRequest, TResponse>(Func<TRequest, Task<TResponse>> handler)
   {
     var type = typeof(TRequest);
-    if (_requestSubscribers.TryGetValue(type, out var list))
-      list.RemoveAll(w => w.Target is Func<TRequest, Task<TResponse>> h && h == handler);
+    if (_requestSubscribers.TryGetValue(type, out var handlers))
+    {
+      //// handlers.RemoveAll(w => w.Target is Func<TRequest, Task<TResponse>> h && h == handler);
+      for (int i = handlers.Count - 1; i >= 0; i--)
+      {
+        var target = handlers[i].Target;
+        if (target is Func<TRequest, Task<TResponse>> existing && existing == handler)
+          handlers.RemoveAt(i);
+        else if (target == null)
+          handlers.RemoveAt(i); // cleanup dead refs
+      }
+    }
   }
 
   /// <inheritdoc/>
@@ -187,6 +215,17 @@ public class EventAggregator : IEventAggregator
     var type = typeof(TEvent);
     if (_eventSubscribers.TryGetValue(type, out var subs))
     {
+      // Manual iteration; removing dead refs
+      for (int i = subs.Count - 1; i >= 0; i--)
+      {
+        var target = subs[i].Target;
+        if (target is Action<TEvent> handler)
+          handler(eventData);
+        else if (target == null)
+          subs.RemoveAt(i);
+      }
+
+      /*
       var dead = new List<WeakReference>();
       foreach (var wr in subs)
       {
@@ -198,36 +237,65 @@ public class EventAggregator : IEventAggregator
 
       foreach (var d in dead)
         subs.Remove(d);
+      */
     }
   }
 
+  /// <summary>
+  ///   Retrieves the first registered request handler delegate for the specified
+  ///   request and response types, if available.
+  /// </summary>
+  /// <remarks>
+  ///   If multiple handlers are registered for the specified request type, only the first available
+  ///   handler is returned. Dead or collected handlers are automatically removed from the internal registry.
+  /// </remarks>
+  /// <typeparam name="TRequest">The type of the request parameter that the handler accepts.</typeparam>
+  /// <typeparam name="TResponse">The type of the response returned by the handler as a task result.</typeparam>
+  /// <returns>
+  ///   A delegate that handles requests of type <typeparamref name="TRequest"/> and
+  ///   returns a <see cref="Task{TResponse}"/> if a handler is registered; otherwise, <see langword="null"/>.
+  /// </returns>
   private Func<TRequest, Task<TResponse>>? GetFirstRequestHandler<TRequest, TResponse>()
   {
     var type = typeof(TRequest);
     if (_requestSubscribers.TryGetValue(type, out var subs))
     {
-      var dead = new List<WeakReference>();
-      foreach (var wr in subs)
+      // Find the first live handler, clean dead ones
+      Func<TRequest, Task<TResponse>>? found = null;
+      for (int i = subs.Count - 1; i >= 0; i--)
       {
-        if (wr.Target is Func<TRequest, Task<TResponse>> handler)
-          return handler;
-
-        dead.Add(wr);
+        // For now, keep scanning backwards to cleanup dead refs.
+        // If this is problematic, we can exit early as we did in commit `825CCCD6`.
+        var target = subs[i].Target;
+        if (target is Func<TRequest, Task<TResponse>> handler)
+          found = handler;
+        else if (target == null)
+          subs.RemoveAt(i);
       }
 
-      foreach (var d in dead)
-        subs.Remove(d);
+      return found;
     }
 
     return null;
   }
 
-  // Incoming messages from transport
+  /// <summary>
+  ///   Processes an incoming transport message envelope, dispatching requests, responses,
+  ///   or published events to the appropriate handlers.
+  /// </summary>
+  /// <remarks>
+  ///   This method routes response messages to pending request handlers, invokes registered request
+  ///   handlers for incoming requests, and delivers published events to local subscribers. If no matching handler is
+  ///   found for a request, the message is ignored. The method does not throw exceptions for deserialization or handler
+  ///   invocation errors; such messages are silently dropped.
+  /// </remarks>
+  /// <param name="envelope">The event envelope containing the serialized event data, type information, correlation identifiers, and routing metadata.</param>
+  /// <returns>A task that represents the asynchronous operation of handling the transport message.</returns>
   private async Task OnTransportMessageAsync(EventEnvelope envelope)
   {
     // Resolve type
     var eventType = Type.GetType(envelope.EventType, throwOnError: false);
-    if (eventType == null)
+    if (eventType is null)
       return;
 
     if (envelope.IsResponse)
@@ -241,7 +309,9 @@ public class EventAggregator : IEventAggregator
     }
 
     // Request or Publish
-    var payloadObj = JsonSerializer.Deserialize(envelope.PayloadJson, eventType)!;
+    var payloadObj = JsonSerializer.Deserialize(envelope.PayloadJson, eventType);
+    if (payloadObj is null)
+      return;
 
     if (envelope.IsRequest)
     {
