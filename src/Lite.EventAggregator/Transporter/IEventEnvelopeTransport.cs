@@ -5,7 +5,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Lite.EventAggregator;
+namespace Lite.EventAggregator.Transporter;
 
 /// <summary>
 ///   Bi-directional event transport interface used for sending and receiving event packages, AKA: "envelopes".

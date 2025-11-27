@@ -12,7 +12,7 @@
     <PackageId>Lite.EventAggregator</PackageId>
     <Version>1.0.0</Version>
     <Authors>Damian Suess</Authors>
-    <Description>Async Event Aggregator with weak references, request/response, timeouts, and optional IPC transports (Named Pipes, Memory-Mapped Files, TCP).</Description>
+    <Description>Async Event Aggregator with optaional IPC Transports. Uses weak references, request/response, timeouts, Transports Named Pipes, Memory-Mapped Files, and TCP/IP.</Description>
     <RepositoryUrl>https://github.com/SuessLabs/Lite.EventAggregator</RepositoryUrl>
     <PackageTags>event-aggregator;ipc;named-pipes;tcp;memory-mapped;pubsub;request-response</PackageTags>
     <PackageLicenseExpression>Apache-2</PackageLicenseExpression>

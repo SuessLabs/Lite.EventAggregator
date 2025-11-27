@@ -4,8 +4,9 @@
 using System.Net;
 using System.Threading.Tasks;
 using Lite.EventAggregator.Transporter;
+using Lite.EventAggregator.Tests.Models;
 
-namespace Lite.EventAggregator.Tests;
+namespace Lite.EventAggregator.Tests.IpcTransporters;
 
 [TestClass]
 public class TcpTransportTests

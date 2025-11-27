@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Lite.EventAggregator;
+namespace Lite.EventAggregator.Transporter;
 
 /// <summary>
 ///   Bi-directional event transport interface used for sending and receiving event packages, AKA: "envelopes".

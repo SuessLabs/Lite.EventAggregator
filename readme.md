@@ -10,6 +10,14 @@ This implementation is features:
 * Uses **weak references** to avoid memory leaks
 * Cleans up dead references during `Publish`.
 * Prevents memory leaks when subscribers are no longer needed.
+* DI-friendly with extensions and hosted service
+* Optional IPC transport mechanisms for inter-process communication (IPC) with **JSON serialization**:
+  * Named Pipe Transport
+  * Memory-Mapped File Transport (_Windows OS only_)
+  * TCP/IP Transport
+* 2 types of IPC communication:
+  * One-way publish/subscribe (`IEventTransport`)
+  * Bidirectional request/response with timeouts (`IEventEnvelopeTransport`)
 
 ## Usage
 
@@ -42,6 +50,13 @@ If you store strong references to handlers, subscribers will never be collected.
 
 ## History
 
+### v1.0.0
+
+* Removed relyance on reflection
+* IPC Transport timeouts for 'Envelope' (receipted) messages
+* Added ability for local event timeouts.
+  * This can happen when there are no subscribers, but you expect there to be one. Previously this was only available for "receipted" IPC transports.
+
 ### v0.9.0
 
 * Async publish + request/response
@@ -52,7 +67,7 @@ If you store strong references to handlers, subscribers will never be collected.
 * **Unit tests**
 * **Full working demos** (one per transport)
 
-* No reflection/linq path in handler dispatch—strongly-typed wrappers are used.
+* No reflection/linq path in handler dispatchï¿½strongly-typed wrappers are used.
 * Weak references to delegates to avoid leaks.
 * Timeout support via RequestAsync parameter (default 5s).
 * Length-prefixed framing across pipe/tcp; EventWaitHandle for MMF.
@@ -81,7 +96,7 @@ This design preserves your weak-reference handlers, remains DI-friendly, and kee
 * **Transports:**
   * `NamedPipeTransport` _(duplex via named server/client pipes + length-prefix framing)_
   * `MemoryMappedTransport` _(two MMFs + named EventWaitHandles for request/response signals)_
-  * `TcpTransport` _(two ports—one for requests, one for responses—with length-prefix framing)_
+  * `TcpTransport` _(two portsï¿½one for requests, one for responsesï¿½with length-prefix framing)_
 
 #### Future Improvements
 
@@ -96,7 +111,7 @@ This design preserves your weak-reference handlers, remains DI-friendly, and kee
 
 ### v0.7.0
 
-Adds optional IPC transport mechanisms for inter-process communication (IPC) with **JSON serialization**. IPC can be integrated with the `IEventTransport` interface.
+Adds optional (one-way) IPC transport mechanisms for inter-process communication (IPC) with **JSON serialization**. IPC can be integrated with the `IEventTransport` interface.
 
 * **Named Pipe** Transport
 * **Memory-Mapped File** Transport (_Windows OS only_)
@@ -115,5 +130,8 @@ Adds optional IPC transport mechanisms for inter-process communication (IPC) wit
 
 ## Future Considerations
 
-* **Async** support for event handling.
+* Send IPC only for specified event types.
 * Possibly, filtering or priority-based dispatching.
+* Refactor `IEventTransport` to`IIpcEvent` for clarity.
+* Refactor `Transporter` namespace to `Ipc` or `IpcTransport` for clarity.
+* Refactor `IEventEnvelopeTransport` under `IpcReceipted` namespace for clarity.

@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Lite.EventAggregator.Core;
+using Lite.EventAggregator.Transporter;
 
 namespace Lite.EventAggregator;
 
@@ -40,33 +41,18 @@ public class EventAggregator : IEventAggregator
   /// <summary>Single direction IPC transporter.</summary>
   private IEventTransport? _ipcTransport;
 
+  /// <summary>Master switch if an IPC Transport is intended or not.</summary>
+  /// <remarks>A local even can have a RequestAsync timeout, but not an IPC receipted transport.</remarks>
+  private bool _usingIpcTransport = false;
+
   /// <inheritdoc/>
-  [Obsolete("Use PublishAsync<TEvent> instead.")]
   public void Publish<TEvent>(TEvent eventData)
   {
-    Task.Run(() => PublishAsync(eventData));
-
-    /*
-    var eventType = typeof(TEvent);
-    if (_eventHandlers.TryGetValue(eventType, out var handlers))
-    {
-      var deadRefs = new List<WeakReference>();
-
-      foreach (var weakRef in handlers)
-      {
-        if (weakRef.Target is Action<TEvent> handler)
-          handler(eventData);
-        else
-          deadRefs.Add(weakRef);
-      }
-
-      foreach (var dead in deadRefs)
-        handlers.Remove(dead);
-    }
+    // Local dispatch
+    DispatchEventLocal(eventData);
 
     // Send to IPC transport if enabled
     _ipcTransport?.Send(eventData);
-    */
   }
 
   /// <inheritdoc/>
@@ -93,33 +79,48 @@ public class EventAggregator : IEventAggregator
   /// <remarks>Bi-directional transport only.</remarks>
   public async Task<TResponse> RequestAsync<TRequest, TResponse>(TRequest request, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
   {
-    // Try local handler first
+    // Try to find local event subscription handler first and exists
+    // NOTE: Consider separating IPC from local event request/response handling
     var local = GetFirstRequestHandler(typeof(TRequest));
-    if (local != null)
+    if (local is not null)
     {
       var r = await local.InvokeAsync(request).ConfigureAwait(false);
       return (TResponse)r!;
     }
 
-    if (_ipcEnvelopeTransport == null)
-      throw new InvalidOperationException("No transport configured for request/response.");
+    // No local handler found or timeout, avoids sitting in a black hole
+    // TODO: Consider creating a custom Exception type for this scenario (there's a timeout ex below)
+    if (!_usingIpcTransport && timeout is null)
+      throw new TimeoutException("No IPC transport configured for request/response, and no local handler found.");
+
+    if (_usingIpcTransport && _ipcEnvelopeTransport is null)
+      throw new InvalidOperationException("No IPC transport configured for request/response.");
+
+    // Edge case: Timeout response not tested with non-recepted transport
+    // Don't allow it for now
+    if (_ipcTransport is not null)
+      throw new InvalidOperationException("Non-receipted IPC transports are allowed for request/response.");
 
     var correlationId = Guid.NewGuid().ToString("N");
     var pending = new PendingRequest { ResponseType = typeof(TResponse) };
     _pendingRequests[correlationId] = pending;
 
-    var envelope = EventSerializer.Wrap(
-      request,
-      isRequest: true,
-      replyTo: _ipcEnvelopeTransport.ReplyAddress,
-      correlationId);
+    EventEnvelope? envelope = null;
+    if (_usingIpcTransport && _ipcEnvelopeTransport is not null)
+    {
+      envelope = EventSerializer.Wrap(
+        request,
+        isRequest: true,
+        replyTo: _ipcEnvelopeTransport!.ReplyAddress,
+        correlationId);
+    }
 
     var cts = timeout.HasValue
       ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
       : null;
 
-    if (cts != null)
-      cts.CancelAfter(timeout.Value);
+    // We know timeout has value here (!)
+    cts?.CancelAfter(timeout!.Value);
 
     var effectiveCt = cts?.Token ?? cancellationToken;
 
@@ -129,7 +130,9 @@ public class EventAggregator : IEventAggregator
         pr.Tcs.TrySetException(new TimeoutException($"Request timed out after {timeout ?? _defaultTimeout}."));
     }))
     {
-      await _ipcEnvelopeTransport.SendAsync(envelope, effectiveCt).ConfigureAwait(false);
+      // For receipted IPC events only
+      if (envelope is not null)
+        await _ipcEnvelopeTransport!.SendAsync(envelope, effectiveCt).ConfigureAwait(false);
 
       var obj = await pending.Tcs.Task.ConfigureAwait(false);
       return (TResponse)obj!;
@@ -239,6 +242,7 @@ public class EventAggregator : IEventAggregator
     if (_ipcTransport is not null)
       _ipcTransport = null;
 
+    _usingIpcTransport = true;
     _ipcEnvelopeTransport = transport;
     await _ipcEnvelopeTransport.StartAsync(OnTransportMessageAsync, cancellationToken);
   }
@@ -249,6 +253,7 @@ public class EventAggregator : IEventAggregator
     if (_ipcEnvelopeTransport is not null)
       _ipcEnvelopeTransport = null;
 
+    _usingIpcTransport = true;
     _ipcTransport = transport;
   }
 
