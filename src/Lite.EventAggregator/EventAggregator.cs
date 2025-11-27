@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -208,6 +208,9 @@ public class EventAggregator : IEventAggregator
     _ipcTransport = transport;
   }
 
+  /// <summary>Dispatches a local event with the specified payload of type <typeparamref name="T"/>.</summary>
+  /// <typeparam name="T">The type of the event payload to be dispatched.</typeparam>
+  /// <param name="payload">The payload data to include with the dispatched event.</param>
   private void DeliverLocalGeneric<T>(T payload) => DispatchEventLocal(payload);
 
   private void DispatchEventLocal<TEvent>(TEvent eventData)
@@ -316,6 +319,9 @@ public class EventAggregator : IEventAggregator
     if (envelope.IsRequest)
     {
       // Find request handler and send response
+
+      /*
+      // Original LINQ-based approach (not used due to non-AOT friendly constraints)
       var handlerList = _requestSubscribers.TryGetValue(eventType, out var subs)
         ? subs
         : null;
@@ -323,43 +329,97 @@ public class EventAggregator : IEventAggregator
       var handler = handlerList?.Select(w => w.Target).OfType<dynamic>().FirstOrDefault();
 
       // no handler – drop or log
-      if (handler == null)
+      if (handler is null)
         return;
 
-      object response;
+      object? responseObj = null;
       try
       {
         // Invoke dynamically
-        response = await handler((dynamic)payloadObj);
+        responseObj = await handler((dynamic)payloadObj);
       }
       catch
       {
         // For brevity, ignoring error propagation
         return;
       }
+      */
 
-      if (_ipcEnvelopeTransport != null && envelope.ReplyTo != null)
+      if (!_requestSubscribers.TryGetValue(eventType, out var subs) || subs.Count == 0)
+        return;
+
+      object? responseObj = null;
+      bool hasHandler = false;
+
+      // Since we cannot use LINQ, we manually iterate to find the first handler
+      // Iterate backward to safely remove dead refs during iteration
+      for (int i = subs.Count - 1; i >= 0; i--)
+      {
+        var target = subs[i].Target;
+        if (target == null)
+        {
+          subs.RemoveAt(i);
+          continue;
+        }
+
+        // Using reflection to invoke the generic delegate without LINQ/ofType
+        // Expected: Func<TRequest, Task<TResponse>>
+        var delegateType = target.GetType();
+        var invoke = delegateType.GetMethod("Invoke");
+        if (invoke != null && invoke.GetParameters().Length == 1)
+        {
+          hasHandler = true;
+
+          try
+          {
+            var taskObj = invoke.Invoke(target, new[] { payloadObj });
+            if (taskObj is Task t)
+            {
+              await t.ConfigureAwait(false);
+
+              // Extract Task<TResponse>.Result via reflection
+              var taskType = t.GetType();
+              var resultProp = taskType.GetProperty("Result", BindingFlags.Public | BindingFlags.Instance);
+              if (resultProp != null)
+              {
+                responseObj = resultProp.GetValue(t);
+              }
+            }
+          }
+          catch
+          {
+            // For demo: ignore handler exception
+          }
+
+          break; // Use the first handler found
+        }
+      }
+
+      // Send response if we have a handler and response object
+      if (hasHandler &&
+          responseObj is not null &&
+          _ipcEnvelopeTransport is not null &&
+          envelope.ReplyTo is not null)
       {
         var responseEnvelope = new EventEnvelope
         {
           MessageId = Guid.NewGuid().ToString("N"),
           CorrelationId = envelope.CorrelationId,
-          EventType = response.GetType().AssemblyQualifiedName!,
+          EventType = responseObj.GetType().AssemblyQualifiedName!,
           IsRequest = false,
           IsResponse = true,
           ReplyTo = envelope.ReplyTo, // used by transport to route back to sender
           Timestamp = DateTimeOffset.UtcNow,
-          PayloadJson = EventSerializer.Serialize(response),
+          PayloadJson = EventSerializer.Serialize(responseObj),
         };
 
-        await _ipcEnvelopeTransport.SendAsync(responseEnvelope);
+        await _ipcEnvelopeTransport.SendAsync(responseEnvelope).ConfigureAwait(false);
       }
 
       return;
     }
 
-    // One-way publish – deliver locally
-    // Use closed generic method
+    // One-way publish – deliver locally with closed generic method
     var deliverMethod = typeof(EventAggregator).GetMethod(
       nameof(DeliverLocalGeneric),
       System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
