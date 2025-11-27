@@ -53,9 +53,9 @@ public class AggregatorTests
   [TestMethod]
   public async Task RequestTimeoutsAsync()
   {
-    // ISSUE:
-    //  There is no subscription found so if falls through an
-    //  sees it's not an IPC receipted event (`_ipcEnvelopeTransport`) either.
+    // Use case:
+    //  There is no subscription found so if falls through
+    //  This is usually reserved for an IPC receipted event (`_ipcEnvelopeTransport`)
     var agg = new EventAggregator();
     await Assert.ThrowsAsync<TimeoutException>(async () =>
         await agg.RequestAsync<Ping, Pong>(
