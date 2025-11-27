@@ -3,7 +3,6 @@
 
 using Lite.EventAggregator.Transporter;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 namespace Lite.EventAggregator.Extensions;
 

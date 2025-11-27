@@ -3,6 +3,7 @@
 
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
+using Lite.EventAggregator.Tests.Models;
 using Lite.EventAggregator.Transporter;
 
 namespace Lite.EventAggregator.Tests.IpcTransporters;
