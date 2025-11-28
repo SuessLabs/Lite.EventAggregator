@@ -16,17 +16,21 @@
     <Description>Async Event Aggregator with optaional IPC Transports. Uses weak references, request/response, timeouts, Transports Named Pipes, Memory-Mapped Files, and TCP/IP.</Description>
     <RepositoryUrl>https://github.com/SuessLabs/Lite.EventIpc</RepositoryUrl>
     <PackageTags>event-aggregator;ipc;named-pipes;tcp;memory-mapped;pubsub;request-response</PackageTags>
-    <PackageLicenseExpression>Apache-2</PackageLicenseExpression>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Title>Lite.EventIpc</Title>
     <PackageProjectUrl>https://github.com/SuessLabs/Lite.EventIpc</PackageProjectUrl>
     <PackageReadmeFile>readme.md</PackageReadmeFile>
     <PackageIcon>logo.png</PackageIcon>
+    <PackageLicenseFile>license.md</PackageLicenseFile>
   </PropertyGroup>
 
 
   <ItemGroup>
     <None Include="..\..\docs\logo.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\..\license.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
