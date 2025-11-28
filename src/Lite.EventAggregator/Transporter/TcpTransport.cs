@@ -5,14 +5,18 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Lite.EventAggregator.Transporter;
 
+/// <summary>TCP/IP IPC Transport.</summary>
 public class TcpTransport : IEventTransport
 {
   private readonly string _host;
   private readonly int _port;
+  private CancellationToken _cancelToken;
+  private CancellationTokenSource? _cts;
 
   public TcpTransport(string host, int port)
   {
@@ -34,23 +38,45 @@ public class TcpTransport : IEventTransport
 
   public void StartListening<TEvent>(Action<TEvent> onEventReceived)
   {
+    _cts = new CancellationTokenSource();
+    _cancelToken = _cts.Token;
+
     // Listen on TCP socket and deserialize
     Task.Run(() =>
     {
       var listener = new TcpListener(IPAddress.Any, _port);
       listener.Start();
-      while (true)
+
+      try
       {
-        using var client = listener.AcceptTcpClient();
-        using var stream = client.GetStream();
+        while (!_cancelToken.IsCancellationRequested)
+        {
+          using var client = listener.AcceptTcpClient();
+          using var stream = client.GetStream();
 
-        var buffer = new byte[4096];
-        var bytesRead = stream.Read(buffer, 0, buffer.Length);
+          var buffer = new byte[4096];
+          var bytesRead = stream.Read(buffer, 0, buffer.Length);
+          // if (bytesRead <= 0) continue;
 
-        var json = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-        var evt = EventSerializer.Deserialize<TEvent>(json);
+          var json = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+          var evt = EventSerializer.Deserialize<TEvent>(json);
 
-        onEventReceived(evt);
+          onEventReceived(evt);
+        }
+      }
+      catch (Exception)
+      {
+        /* Swallow exceptions until we get logging coming later */
+      }
+      finally
+      {
+        try
+        {
+          listener.Stop();
+        }
+        catch
+        {
+        }
       }
     });
   }
@@ -58,5 +84,6 @@ public class TcpTransport : IEventTransport
   /// <inheritdoc/>
   public void StopListening()
   {
+    _cts?.Cancel();
   }
 }

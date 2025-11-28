@@ -2,6 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Net;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Lite.EventAggregator.Tests.Models;
@@ -58,5 +59,36 @@ public class MemoryMappedTests : BaseTestClass
     client.Send(new UserCreatedEvent { UserName = ExpectedUserName });
 
     Assert.IsFalse(msgReceived);
+  }
+
+  [TestMethod]
+  [Ignore("This methodogoly is not implemented yet.")]
+  public void VNextTcpTransportTest()
+  {
+    var msgPayload = "hello";
+    var msgReceived = false;
+
+    var server = new EventAggregator();
+    var client = new EventAggregator();
+
+    var serverIpcTransport = new MemoryMappedTransport(MapName);
+    var clientIpcTransport = new MemoryMappedTransport(MapName);
+
+    server.UseIpcTransport(serverIpcTransport);
+    client.UseIpcTransport(clientIpcTransport);
+
+    // Server listener
+    server.Subscribe<Ping>(req =>
+    {
+      if (req.Message == msgPayload)
+        msgReceived = true;
+    });
+
+    // Client sender
+    client.Publish(new Ping(msgPayload));
+
+    // Give it a moment
+    Task.Delay(DefaultTimeout).Wait();
+    Assert.IsTrue(msgReceived);
   }
 }

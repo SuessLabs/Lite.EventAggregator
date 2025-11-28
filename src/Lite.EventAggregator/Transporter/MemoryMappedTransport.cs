@@ -51,6 +51,7 @@ public class MemoryMappedTransport : IEventTransport
     {
       while (!_cancelToken.IsCancellationRequested)
       {
+        // Don't just open, we need to create or open to avoid exceptions
         using var mmf = MemoryMappedFile.CreateOrOpen(_mapName, BufferSize);
         ////using var mmf = MemoryMappedFile.OpenExisting(_mapName);
         using var accessor = mmf.CreateViewAccessor();
