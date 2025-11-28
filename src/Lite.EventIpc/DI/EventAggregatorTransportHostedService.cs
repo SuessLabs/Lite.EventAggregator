@@ -1,5 +1,6 @@
 // Copyright Xeno Innovations, Inc. 2025
 // See the LICENSE file in the project root for more information.
+#if PREVIEW
 
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,3 +26,4 @@ public sealed class EventAggregatorTransportHostedService : IHostedService
 
   public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }
+#endif

@@ -1,4 +1,4 @@
-# Lite Event Aggregator in C#
+# Lite Event Aggregator and IPC Tranporter
 
 Lite.EventIPC is a cross-platform local Event Aggregator and remote IPC service library for C#. The pattern is used for decoupling publishers and subscribers in a single or multiple applications. The library can be easily extended for custom IPC transports using the `IEventTransport` interface to suit your needs (_need I say, DBus?_)
 
@@ -19,7 +19,7 @@ This implementation is features:
   * TCP/IP Transport
 * 2 types of IPC communication:
   * One-way publish/subscribe (`IEventTransport`)
-  * Bidirectional request/response with timeouts (`IEventEnvelopeTransport`)
+  * (_COMING SOON_) Bidirectional request/response with timeouts (`IEventEnvelopeTransport`)
 
 ## Usage
 

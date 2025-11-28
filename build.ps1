@@ -8,9 +8,9 @@ if (Test-Path -Path "output\")
 }
 
 # Clean both debug and release
-dotnet clean src/Lite.EventAggregator.slnx --configuration Release
+dotnet clean src/Lite.EventIpc.slnx --configuration Release
 
-dotnet build src/Lite.EventAggregator.slnx --configuration Release
+dotnet build src/Lite.EventIpc.slnx --configuration Release
 
 # Publish
 Write-Output "Cleaning Publish folder.."
@@ -25,10 +25,10 @@ else
 }
 
 ## Publish build artifacts
-##dotnet publish src/Lite.EventAggregator/Lite.EventAggregator.csproj /p:PublishProfile=src/Lite.EventAggregator/Properties/PublishProfiles/win-x64.pubxml /p:DebugType=None /p:DebugSymbols=false
+##dotnet publish src/Lite.EventIpc/Lite.EventIpc.csproj /p:PublishProfile=src/Lite.EventIpc/Properties/PublishProfiles/win-x64.pubxml /p:DebugType=None /p:DebugSymbols=false
 ##
 #### Compress published artifacts
 ##Write-Output "Compressing published artifacts..."
 ##$dttm = (Get-Date).ToString("yyyy-MM-dd")
-##$version = (Get-Item -Path "publish/win-x64/Lite.EventAggregator.dll").VersionInfo.FileVersion
-##Compress-Archive -Path "publish/win-x64/*" -DestinationPath "publish/Lite.EventAggregator-${version}-(win-x64)_${dttm}.zip"
+##$version = (Get-Item -Path "publish/win-x64/Lite.EventIpc.dll").VersionInfo.FileVersion
+##Compress-Archive -Path "publish/win-x64/*" -DestinationPath "publish/Lite.EventIpc-${version}-(win-x64)_${dttm}.zip"

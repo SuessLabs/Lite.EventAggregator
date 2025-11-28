@@ -92,7 +92,6 @@ public interface IEventAggregator
   /// <param name="envelopeTransport">The IPC event envelope transport to use for receiving and processing messages. Cannot be null.</param>
   /// <param name="cancellationToken">A cancellation token that can be used to cancel the asynchronous operation.</param>
   /// <returns>A task that represents the asynchronous operation of starting the transport.</returns>
-
   Task UseIpcEnvelopeTransportAsync(IEventEnvelopeTransport envelopeTransport, CancellationToken cancellationToken = default);
 
   /// <summary>
