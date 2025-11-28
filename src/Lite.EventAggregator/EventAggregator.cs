@@ -127,14 +127,19 @@ public class EventAggregator : IEventAggregator
     using (effectiveCt.Register(() =>
     {
       if (_pendingRequests.TryRemove(correlationId, out var pr))
-        pr.Tcs.TrySetException(new TimeoutException($"Request timed out after {timeout ?? _defaultTimeout}."));
+      {
+        // TODO (2025-11-28): Fix receipted timeout exception handling. It always throws and fails to cast to TResponse
+        //// pr.Payload.SetResult(pr);
+        pr.Payload.TrySetException(new TimeoutException($"Request timed out after {timeout ?? _defaultTimeout}."));
+      }
     }))
     {
       // For receipted IPC events only
       if (envelope is not null)
         await _ipcEnvelopeTransport!.SendAsync(envelope, effectiveCt).ConfigureAwait(false);
 
-      var obj = await pending.Tcs.Task.ConfigureAwait(false);
+      // TODO: (2025-11-28): Fix receipted timeout exception handling. It always fails to cast 'PendingRequest' to TResponse
+      var obj = await pending.Payload.Task.ConfigureAwait(false);
       return (TResponse)obj!;
     }
   }
@@ -340,11 +345,11 @@ public class EventAggregator : IEventAggregator
         try
         {
           var obj = JsonSerializer.Deserialize(envelope.PayloadJson, pr.ResponseType);
-          pr.Tcs.TrySetResult(obj);
+          pr.Payload.TrySetResult(obj);
         }
         catch (Exception ex)
         {
-          pr.Tcs.TrySetException(ex);
+          pr.Payload.TrySetException(ex);
         }
       }
 
@@ -404,8 +409,10 @@ public class EventAggregator : IEventAggregator
 
   private sealed class PendingRequest
   {
+    /// <summary>Datatype of the response.</summary>
     public Type ResponseType { get; init; } = default!;
 
-    public TaskCompletionSource<object?> Tcs { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    /// <summary>Response object.</summary>
+    public TaskCompletionSource<object?> Payload { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
   }
 }
