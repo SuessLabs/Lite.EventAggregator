@@ -7,7 +7,7 @@ using System.Text;
 using Lite.EventAggregator;
 using Lite.EventAggregator.Transporter;
 
-namespace SampleApp;
+namespace SampleApp.IpcTransporters;
 
 public class IpcOneWay
 {
