@@ -10,9 +10,11 @@ using Lite.EventAggregator.Transporter;
 namespace Lite.EventAggregator.Tests.IpcReceiptedTransporters;
 
 [TestClass]
+[DoNotParallelize]
 public class TcpTransportTests : BaseTestClass
 {
   [TestMethod]
+  [DoNotParallelize]
   public async Task Request_Response_Via_TcpAsync()
   {
     var client = new EventAggregator();

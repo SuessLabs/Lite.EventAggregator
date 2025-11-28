@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Lite.EventAggregator\Lite.EventAggregator.csproj" />
+    <ProjectReference Include="..\Lite.EventIpc\Lite.EventIpc.csproj" />
   </ItemGroup>
 
 </Project>
