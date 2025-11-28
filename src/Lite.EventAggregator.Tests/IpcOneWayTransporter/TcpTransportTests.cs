@@ -9,6 +9,7 @@ using Lite.EventAggregator.Transporter;
 namespace Lite.EventAggregator.Tests.IpcOneWayTransporter;
 
 [TestClass]
+[DoNotParallelize]
 public class TcpTransportTests : BaseTestClass
 {
   private const int RequestSendPort = 6001;
@@ -23,6 +24,7 @@ public class TcpTransportTests : BaseTestClass
   }
 
   [TestMethod]
+  [DoNotParallelize]
   public void OneWayTcpIpcTransportTest()
   {
     var msgPayload = "hello";

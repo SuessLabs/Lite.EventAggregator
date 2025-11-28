@@ -8,6 +8,7 @@ using Lite.EventAggregator.Transporter;
 namespace Lite.EventAggregator.Tests.IpcOneWayTransporter;
 
 [TestClass]
+[DoNotParallelize]
 public class NamedPipesTests : BaseTestClass
 {
   private string _msgPayload = "hello";
@@ -20,6 +21,7 @@ public class NamedPipesTests : BaseTestClass
   }
 
   [TestMethod]
+  [DoNotParallelize]
   public void NamedPipeTest()
   {
     var serverTransport = new NamedPipeTransport("server-requests-in");
