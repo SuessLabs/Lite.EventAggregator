@@ -9,6 +9,7 @@ using Lite.EventAggregator.Transporter;
 namespace Lite.EventAggregator.Tests.IpcReceiptedTransporters;
 
 [TestClass]
+[DoNotParallelize]
 public class NamedPipesTests : BaseTestClass
 {
   [TestMethod]
