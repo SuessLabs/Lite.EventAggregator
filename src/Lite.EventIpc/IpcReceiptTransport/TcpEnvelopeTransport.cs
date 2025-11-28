@@ -1,5 +1,6 @@
 // Copyright Xeno Innovations, Inc. 2025
 // See the LICENSE file in the project root for more information.
+#if PREVIEW
 
 using System;
 using System.Net;
@@ -9,7 +10,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Lite.EventAggregator.Transporter;
+namespace Lite.EventAggregator.IpcReceiptTransport;
 
 /// <summary>
 ///   Provides TCP-based transport for sending and receiving async bi-directional event envelopes,
@@ -154,3 +155,5 @@ public class TcpEnvelopeTransport : IEventEnvelopeTransport
     await stream.WriteAsync(bytes.AsMemory(), ct);
   }
 }
+
+#endif

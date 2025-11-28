@@ -4,21 +4,22 @@
     <!--<TargetFramework>net8.0,net9.0,net10.0</TargetFramework>-->
     <TargetFramework>net10.0</TargetFramework>
     <FileVersion>1.0.0</FileVersion>
+    <Configurations>Debug;Release;PREVIEW</Configurations>
   </PropertyGroup>
 
 
   <PropertyGroup>
     <!-- NuGet metadata -->
-    <PackageId>Lite.EventAggregator</PackageId>
+    <PackageId>Lite.EventIpc</PackageId>
     <Version>1.0.0</Version>
     <Authors>Damian Suess</Authors>
     <Description>Async Event Aggregator with optaional IPC Transports. Uses weak references, request/response, timeouts, Transports Named Pipes, Memory-Mapped Files, and TCP/IP.</Description>
-    <RepositoryUrl>https://github.com/SuessLabs/Lite.EventAggregator</RepositoryUrl>
+    <RepositoryUrl>https://github.com/SuessLabs/Lite.EventIpc</RepositoryUrl>
     <PackageTags>event-aggregator;ipc;named-pipes;tcp;memory-mapped;pubsub;request-response</PackageTags>
     <PackageLicenseExpression>Apache-2</PackageLicenseExpression>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Title>Lite.EventAggregator</Title>
-    <PackageProjectUrl>https://github.com/SuessLabs/Lite.EventAggregator</PackageProjectUrl>
+    <Title>Lite.EventIpc</Title>
+    <PackageProjectUrl>https://github.com/SuessLabs/Lite.EventIpc</PackageProjectUrl>
     <PackageReadmeFile>readme.md</PackageReadmeFile>
   </PropertyGroup>
 
@@ -33,6 +34,11 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Folder Include="IpcReceiptTransport\" />
   </ItemGroup>
 
 </Project>

@@ -1,9 +1,11 @@
 // Copyright Xeno Innovations, Inc. 2025
 // See the LICENSE file in the project root for more information.
+#if PREVIEW
 
 using System.Threading;
 using System.Threading.Tasks;
-using Lite.EventAggregator.Transporter;
+using Lite.EventAggregator.IpcReceiptTransport;
+using Lite.EventAggregator.IpcTransport;
 using Microsoft.Extensions.Hosting;
 
 namespace Lite.EventAggregator;
@@ -25,3 +27,5 @@ public sealed class EventAggregatorTransportHostedService : IHostedService
 
   public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }
+
+#endif

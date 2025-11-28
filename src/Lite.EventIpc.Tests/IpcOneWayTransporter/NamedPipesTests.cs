@@ -2,8 +2,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Threading.Tasks;
+using Lite.EventAggregator.IpcTransport;
 using Lite.EventAggregator.Tests.Models;
-using Lite.EventAggregator.Transporter;
 
 namespace Lite.EventAggregator.Tests.IpcOneWayTransporter;
 

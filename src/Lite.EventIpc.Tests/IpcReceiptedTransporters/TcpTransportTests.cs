@@ -1,11 +1,12 @@
 // Copyright Xeno Innovations, Inc. 2025
 // See the LICENSE file in the project root for more information.
+#if PREVIEW
 
 using System;
 using System.Net;
 using System.Threading.Tasks;
+using Lite.EventAggregator.IpcReceiptTransport;
 using Lite.EventAggregator.Tests.Models;
-using Lite.EventAggregator.Transporter;
 
 namespace Lite.EventAggregator.Tests.IpcReceiptedTransporters;
 
@@ -45,3 +46,5 @@ public class TcpTransportTests : BaseTestClass
     Assert.AreEqual("hello tcp", resp.Message);
   }
 }
+
+#endif

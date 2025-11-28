@@ -1,5 +1,6 @@
 // Copyright Xeno Innovations, Inc. 2025
 // See the LICENSE file in the project root for more information.
+#if PREVIEW
 
 using System;
 using System.IO;
@@ -9,7 +10,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Lite.EventAggregator.Transporter;
+namespace Lite.EventAggregator.IpcReceiptTransport;
 
 /// <summary>
 ///   Provides an async + bi-directional event envelope transport mechanism
@@ -158,3 +159,5 @@ public class NamedPipeEnvelopeTransport : IEventEnvelopeTransport
     await stream.WriteAsync(payload.AsMemory(), ct);
   }
 }
+
+#endif

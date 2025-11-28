@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Lite.EventAggregator.Transporter;
+namespace Lite.EventAggregator.IpcTransport;
 
 /// <summary>Memory-Mapped IPC Transport (Windows OS only).</summary>
 [SupportedOSPlatform("windows")]
