@@ -21,10 +21,15 @@
     <Title>Lite.EventIpc</Title>
     <PackageProjectUrl>https://github.com/SuessLabs/Lite.EventIpc</PackageProjectUrl>
     <PackageReadmeFile>readme.md</PackageReadmeFile>
+    <PackageIcon>logo.png</PackageIcon>
   </PropertyGroup>
 
 
   <ItemGroup>
+    <None Include="..\..\docs\logo.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
     <None Include="..\..\readme.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
