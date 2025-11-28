@@ -2,6 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Diagnostics;
 using System.IO.MemoryMappedFiles;
 using System.Runtime.Versioning;
 using System.Text;
@@ -112,6 +113,7 @@ public class MemoryMappedEnvelopeTransport : IEventEnvelopeTransport
       catch
       {
         /* swallow until we get logging */
+        Debug.WriteLine("Exception: MemoryMap (Receipted) Lister");
       }
     }
   }

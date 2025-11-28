@@ -8,7 +8,7 @@ using Lite.EventAggregator.Tests.Models;
 namespace Lite.EventAggregator.Tests.LocalEvents;
 
 [TestClass]
-public class AggregatorTests
+public class AggregatorTests : BaseTestClass
 {
   [TestMethod]
   public void BasicEventTest()
@@ -60,7 +60,7 @@ public class AggregatorTests
     await Assert.ThrowsAsync<TimeoutException>(async () =>
         await agg.RequestAsync<Ping, Pong>(
           new Ping("hi"),
-          timeout: TimeSpan.FromMilliseconds(50),
+          timeout: TimeSpan.FromMilliseconds(DefaultTimeout),
           System.Threading.CancellationToken.None));
   }
 

@@ -5,6 +5,7 @@ using System;
 using System.IO.MemoryMappedFiles;
 using System.Runtime.Versioning;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Lite.EventAggregator.Transporter;
@@ -15,6 +16,8 @@ public class MemoryMappedTransport : IEventTransport
 {
   private const int BufferSize = 4096;
   private readonly string _mapName;
+  private CancellationToken _cancelToken;
+  private CancellationTokenSource? _cts;
 
   public MemoryMappedTransport(string mapName)
   {
@@ -40,17 +43,43 @@ public class MemoryMappedTransport : IEventTransport
     if (_mapName is null)
       throw new InvalidOperationException("Missing map name");
 
+    _cts = new CancellationTokenSource();
+    _cancelToken = _cts.Token;
+
     // Poll memory-mapped file for changes
     Task.Run(() =>
     {
-      using var mmf = MemoryMappedFile.OpenExisting(_mapName);
-      using var accessor = mmf.CreateViewAccessor();
-      var bytes = new byte[BufferSize];
-      accessor.ReadArray(0, bytes, 0, bytes.Length);
+      while (!_cancelToken.IsCancellationRequested)
+      {
+        // Don't just open, we need to create or open to avoid exceptions
+        using var mmf = MemoryMappedFile.CreateOrOpen(_mapName, BufferSize);
+        ////using var mmf = MemoryMappedFile.OpenExisting(_mapName);
+        using var accessor = mmf.CreateViewAccessor();
+        var length = accessor.ReadInt32(0);
 
-      var json = Encoding.UTF8.GetString(bytes).TrimEnd('\0');
-      var evt = EventSerializer.Deserialize<TEvent>(json);
-      onEventReceived(evt);
+        if (length <= 0)
+          continue;
+
+        var bytes = new byte[BufferSize];
+        accessor.ReadArray(0, bytes, 0, bytes.Length);
+
+        var json = Encoding.UTF8.GetString(bytes).TrimEnd('\0');
+        try
+        {
+          var evt = EventSerializer.Deserialize<TEvent>(json);
+          onEventReceived(evt);
+        }
+        catch (Exception)
+        {
+          throw new InvalidCastException("Invalid JSON payload");
+        }
+      } // While not cancelled
     });
+  }
+
+  /// <summary>Stop Memory-Mapp Server Listening.</summary>
+  public void StopListening()
+  {
+    _cts?.Cancel();
   }
 }

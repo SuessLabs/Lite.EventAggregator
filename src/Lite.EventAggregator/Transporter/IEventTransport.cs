@@ -24,4 +24,7 @@ public interface IEventTransport
   /// <typeparam name="TEvent">Type of event data.</typeparam>
   /// <param name="onEventReceived">Message handler.</param>
   void StartListening<TEvent>(Action<TEvent> onEventReceived);
+
+  /// <summary>Stop listensing or responses operations.</summary>
+  void StopListening();
 }

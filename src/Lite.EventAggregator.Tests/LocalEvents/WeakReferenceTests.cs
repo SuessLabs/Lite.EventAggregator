@@ -7,7 +7,7 @@ using Lite.EventAggregator.Tests.Models;
 namespace Lite.EventAggregator.Tests.LocalEvents;
 
 [TestClass]
-public class WeakReferenceTests
+public class WeakReferenceTests : BaseTestClass
 {
   private static bool _received = false;
 

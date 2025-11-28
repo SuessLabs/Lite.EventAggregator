@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.IO.Pipes;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Lite.EventAggregator.Transporter;
@@ -12,6 +13,8 @@ namespace Lite.EventAggregator.Transporter;
 public class NamedPipeTransport : IEventTransport
 {
   private readonly string _pipeName;
+  private CancellationToken _cancelToken;
+  private CancellationTokenSource? _cts;
 
   public NamedPipeTransport(string pipeName)
   {
@@ -30,16 +33,28 @@ public class NamedPipeTransport : IEventTransport
 
   public void StartListening<TEvent>(Action<TEvent> onEventReceived)
   {
+    _cts = new CancellationTokenSource();
+    _cancelToken = _cts.Token;
+
     Task.Run(() =>
     {
-      using var server = new NamedPipeServerStream(_pipeName, PipeDirection.In);
-      server.WaitForConnection();
+      while (!_cancelToken.IsCancellationRequested)
+      {
+        using var server = new NamedPipeServerStream(_pipeName, PipeDirection.In);
+        server.WaitForConnection();
 
-      using var reader = new StreamReader(server);
-      var json = reader.ReadToEnd();
+        using var reader = new StreamReader(server);
+        var json = reader.ReadToEnd();
 
-      var evt = EventSerializer.Deserialize<TEvent>(json);
-      onEventReceived(evt);
+        var evt = EventSerializer.Deserialize<TEvent>(json);
+        onEventReceived(evt);
+      }
     });
+  }
+
+  /// <inheritdoc/>
+  public void StopListening()
+  {
+    _cts?.Cancel();
   }
 }
