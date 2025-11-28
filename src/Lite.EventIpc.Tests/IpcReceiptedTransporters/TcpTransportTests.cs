@@ -5,10 +5,10 @@
 using System;
 using System.Net;
 using System.Threading.Tasks;
-using Lite.EventAggregator.IpcReceiptTransport;
-using Lite.EventAggregator.Tests.Models;
+using Lite.EventIpc.IpcReceiptTransport;
+using Lite.EventIpc.Tests.Models;
 
-namespace Lite.EventAggregator.Tests.IpcReceiptedTransporters;
+namespace Lite.EventIpc.Tests.IpcReceiptedTransporters;
 
 [TestClass]
 [DoNotParallelize]

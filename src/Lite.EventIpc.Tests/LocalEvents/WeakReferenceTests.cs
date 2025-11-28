@@ -2,9 +2,9 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using Lite.EventAggregator.Tests.Models;
+using Lite.EventIpc.Tests.Models;
 
-namespace Lite.EventAggregator.Tests.LocalEvents;
+namespace Lite.EventIpc.Tests.LocalEvents;
 
 [TestClass]
 public class WeakReferenceTests : BaseTestClass

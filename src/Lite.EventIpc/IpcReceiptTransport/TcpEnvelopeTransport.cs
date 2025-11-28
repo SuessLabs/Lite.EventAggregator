@@ -10,7 +10,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Lite.EventAggregator.IpcReceiptTransport;
+namespace Lite.EventIpc.IpcReceiptTransport;
 
 /// <summary>
 ///   Provides TCP-based transport for sending and receiving async bi-directional event envelopes,

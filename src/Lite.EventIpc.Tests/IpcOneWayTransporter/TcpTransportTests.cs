@@ -3,10 +3,10 @@
 
 using System.Net;
 using System.Threading.Tasks;
-using Lite.EventAggregator.Tests.Models;
-using Lite.EventAggregator.IpcTransport;
+using Lite.EventIpc.Tests.Models;
+using Lite.EventIpc.IpcTransport;
 
-namespace Lite.EventAggregator.Tests.IpcOneWayTransporter;
+namespace Lite.EventIpc.Tests.IpcOneWayTransporter;
 
 [TestClass]
 [DoNotParallelize]

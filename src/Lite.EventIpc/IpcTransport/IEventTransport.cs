@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Lite.EventAggregator.IpcTransport;
+namespace Lite.EventIpc.IpcTransport;
 
 /// <summary>
 ///   Bi-directional event transport interface used for sending and receiving event packages, AKA: "envelopes".

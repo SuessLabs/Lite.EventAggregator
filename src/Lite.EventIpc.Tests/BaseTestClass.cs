@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Lite.EventAggregator.Tests;
+namespace Lite.EventIpc.Tests;
 
 [TestClass]
 public class BaseTestClass

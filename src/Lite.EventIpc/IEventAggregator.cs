@@ -4,10 +4,10 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Lite.EventAggregator.IpcReceiptTransport;
-using Lite.EventAggregator.IpcTransport;
+using Lite.EventIpc.IpcReceiptTransport;
+using Lite.EventIpc.IpcTransport;
 
-namespace Lite.EventAggregator;
+namespace Lite.EventIpc;
 
 public interface IEventAggregator
 {

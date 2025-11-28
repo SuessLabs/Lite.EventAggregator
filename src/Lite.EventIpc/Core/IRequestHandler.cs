@@ -4,7 +4,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Lite.EventAggregator.Core;
+namespace Lite.EventIpc.Core;
 
 internal interface IRequestHandler
 {

@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Lite.EventAggregator.Core;
+namespace Lite.EventIpc.Core;
 
 /// <summary>Stores a weak reference to the delegate, and a typed invoker.</summary>
 internal sealed class WeakAction<T> : IWeakAction

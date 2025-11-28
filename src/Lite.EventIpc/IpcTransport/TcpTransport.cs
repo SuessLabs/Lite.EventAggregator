@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Lite.EventAggregator.IpcTransport;
+namespace Lite.EventIpc.IpcTransport;
 
 /// <summary>TCP/IP IPC Transport.</summary>
 public class TcpTransport : IEventTransport

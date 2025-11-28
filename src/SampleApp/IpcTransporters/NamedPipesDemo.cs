@@ -4,8 +4,8 @@
 
 using System;
 using System.Threading.Tasks;
-using Lite.EventAggregator;
-using Lite.EventAggregator.IpcReceiptTransport;
+using Lite.EventIpc;
+using Lite.EventIpc.IpcReceiptTransport;
 
 namespace SampleApp.IpcTransporters;
 

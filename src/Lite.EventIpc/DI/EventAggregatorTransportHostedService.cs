@@ -4,11 +4,11 @@
 
 using System.Threading;
 using System.Threading.Tasks;
-using Lite.EventAggregator.IpcReceiptTransport;
-using Lite.EventAggregator.IpcTransport;
+using Lite.EventIpc.IpcReceiptTransport;
+using Lite.EventIpc.IpcTransport;
 using Microsoft.Extensions.Hosting;
 
-namespace Lite.EventAggregator;
+namespace Lite.EventIpc;
 
 public sealed class EventAggregatorTransportHostedService : IHostedService
 {

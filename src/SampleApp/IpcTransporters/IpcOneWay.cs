@@ -4,8 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Lite.EventAggregator;
-using Lite.EventAggregator.IpcTransport;
+using Lite.EventIpc;
+using Lite.EventIpc.IpcTransport;
 
 namespace SampleApp.IpcTransporters;
 

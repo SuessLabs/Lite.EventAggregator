@@ -11,7 +11,7 @@ public class AspNetDISample
 {
   /*
   using System.Net;
-  using Lite.EventAggregator;
+  using Lite.EventIpc;
   using Microsoft.AspNetCore.Builder;
   using Microsoft.Extensions.DependencyInjection;
 

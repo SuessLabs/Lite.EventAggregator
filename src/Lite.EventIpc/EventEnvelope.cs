@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Lite.EventAggregator;
+namespace Lite.EventIpc;
 
 /// <summary>Event Envelope.</summary>
 public sealed class EventEnvelope

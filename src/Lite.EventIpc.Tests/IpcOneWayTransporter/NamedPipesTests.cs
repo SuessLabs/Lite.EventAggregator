@@ -2,10 +2,10 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Threading.Tasks;
-using Lite.EventAggregator.IpcTransport;
-using Lite.EventAggregator.Tests.Models;
+using Lite.EventIpc.IpcTransport;
+using Lite.EventIpc.Tests.Models;
 
-namespace Lite.EventAggregator.Tests.IpcOneWayTransporter;
+namespace Lite.EventIpc.Tests.IpcOneWayTransporter;
 
 [TestClass]
 [DoNotParallelize]

@@ -1,7 +1,7 @@
 // Copyright Xeno Innovations, Inc. 2025
 // See the LICENSE file in the project root for more information.
 
-namespace Lite.EventAggregator.Tests.Models;
+namespace Lite.EventIpc.Tests.Models;
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1649:File name should match first type name", Justification = "Tiny Ping/Pong")]
 public record Ping(string Message);

@@ -4,7 +4,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Lite.EventAggregator.Core;
+namespace Lite.EventIpc.Core;
 
 /// <summary>
 ///   Provides a handler for asynchronous requests and responses, associating a delegate with specific request and

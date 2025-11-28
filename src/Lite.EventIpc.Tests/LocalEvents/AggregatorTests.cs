@@ -3,9 +3,9 @@
 
 using System;
 using System.Threading.Tasks;
-using Lite.EventAggregator.Tests.Models;
+using Lite.EventIpc.Tests.Models;
 
-namespace Lite.EventAggregator.Tests.LocalEvents;
+namespace Lite.EventIpc.Tests.LocalEvents;
 
 [TestClass]
 public class AggregatorTests : BaseTestClass

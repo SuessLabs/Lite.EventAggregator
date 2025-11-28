@@ -7,11 +7,11 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Lite.EventAggregator.Core;
-using Lite.EventAggregator.IpcReceiptTransport;
-using Lite.EventAggregator.IpcTransport;
+using Lite.EventIpc.Core;
+using Lite.EventIpc.IpcReceiptTransport;
+using Lite.EventIpc.IpcTransport;
 
-namespace Lite.EventAggregator;
+namespace Lite.EventIpc;
 
 /// <summary>
 ///   Provides a central hub for publishing events and handling request/response messaging between loosely coupled

@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Lite.EventAggregator.Core;
+namespace Lite.EventIpc.Core;
 
 /// <summary>
 ///   Defines a contract for actions that reference event handlers using weak references, enabling invocation and lifetime
