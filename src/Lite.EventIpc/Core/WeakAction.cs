@@ -6,6 +6,7 @@ using System;
 namespace Lite.EventIpc.Core;
 
 /// <summary>Stores a weak reference to the delegate, and a typed invoker.</summary>
+/// <typeparam name="T">The type of the event payload.</typeparam>
 internal sealed class WeakAction<T> : IWeakAction
 {
   private readonly WeakReference _delegateRef;
@@ -22,11 +23,10 @@ internal sealed class WeakAction<T> : IWeakAction
   public void InvokeObject(object payload)
   {
     var t = _delegateRef.Target as Action<T>;
-    if (t != null && payload is T typed)
-    {
+    if (t is not null && payload is T typed)
       t(typed);
-    }
   }
 
-  public bool Matches(Delegate handler) => _delegateRef.Target is Action<T> a && a == (Action<T>)handler;
+  public bool Matches(Delegate handler) =>
+    _delegateRef.Target is Action<T> a && a == (Action<T>)handler;
 }
