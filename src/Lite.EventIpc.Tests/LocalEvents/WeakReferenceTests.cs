@@ -3,6 +3,7 @@
 
 using System;
 using Lite.EventIpc.Tests.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Lite.EventIpc.Tests.LocalEvents;
 
@@ -10,20 +11,26 @@ namespace Lite.EventIpc.Tests.LocalEvents;
 public class WeakReferenceTests : BaseTestClass
 {
   private static bool _received = false;
+  private IEventAggregator _eventAggregator = null!;
+
+  [TestInitialize]
+  public void CleanupTestInitialize()
+  {
+    _logger = CreateConsoleLogger<EventAggregator>(LogLevel.Trace);
+    _eventAggregator = new EventAggregator(_logger);
+  }
 
   [TestMethod]
   public void WeakReferenceTest()
   {
-    var eventAggregator = new EventAggregator();
-
     // Non-weak reference subscription for comparison
     //// eventAggregator.Subscribe<UserCreatedEvent>(e => _received = true);
 
     // If subscriber goes out of scope and GC runs, handler will be removed automatically
-    var subscriber = new Subscriber(eventAggregator);
+    var subscriber = new Subscriber(_eventAggregator);
 
     // Publish
-    eventAggregator.Publish(new UserCreatedEvent { UserName = "Damian" });
+    _eventAggregator.Publish(new UserCreatedEvent { UserName = "Damian" });
 
     Assert.IsTrue(_received);
     Assert.IsNotNull(subscriber);

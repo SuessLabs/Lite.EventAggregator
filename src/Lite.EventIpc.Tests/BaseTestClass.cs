@@ -1,9 +1,7 @@
 // Copyright Xeno Innovations, Inc. 2025
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace Lite.EventIpc.Tests;
 
@@ -15,5 +13,25 @@ public class BaseTestClass
 
   public const int DefaultTimeout200 = 200;
 
+  [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1401:Fields should be private", Justification = "This is a parent class")]
+  protected ILogger<EventAggregator>? _logger;
+
   public TestContext TestContext { get; set; }
+
+  protected ILogger<T> CreateConsoleLogger<T>(LogLevel minimumLevel = LogLevel.Debug)
+  {
+    var factory = LoggerFactory.Create(config =>
+    {
+      //// config.AddConsole();
+      config.AddConsole(options =>
+      {
+        options.TimestampFormat = "[HH:mm:ss.fff] ";
+        options.UseUtcTimestamp = false;
+        options.IncludeScopes = true;
+      });
+      config.SetMinimumLevel(minimumLevel);
+    });
+
+    return factory.CreateLogger<T>();
+  }
 }

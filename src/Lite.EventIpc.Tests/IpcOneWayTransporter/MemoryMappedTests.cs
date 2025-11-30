@@ -1,12 +1,11 @@
 // Copyright Xeno Innovations, Inc. 2025
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Net;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
-using Lite.EventIpc.Tests.Models;
 using Lite.EventIpc.IpcTransport;
+using Lite.EventIpc.Tests.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Lite.EventIpc.Tests.IpcOneWayTransporter;
 
@@ -16,27 +15,10 @@ public class MemoryMappedTests : BaseTestClass
 {
   private const string MapName = "test-map";
 
-  [TestMethod]
-  public void OneWayMemoryMapTest()
+  [TestInitialize]
+  public void CleanupTestInitialize()
   {
-    const string ExpectedUserName = "Hello";
-
-    var server = new MemoryMappedTransport(MapName);
-    var client = new MemoryMappedTransport(MapName);
-
-    bool msgReceived = false;
-
-    server.StartListening<UserCreatedEvent>(evt =>
-    {
-      Assert.AreEqual(ExpectedUserName, evt.UserName);
-      msgReceived = true;
-    });
-
-    client.Send(new UserCreatedEvent { UserName = ExpectedUserName });
-
-    // Give it a moment
-    Task.Delay(5).Wait();
-    Assert.IsTrue(msgReceived);
+    _logger = CreateConsoleLogger<EventAggregator>(LogLevel.Debug);
   }
 
   [TestMethod]
@@ -59,6 +41,29 @@ public class MemoryMappedTests : BaseTestClass
     client.Send(new UserCreatedEvent { UserName = ExpectedUserName });
 
     Assert.IsFalse(msgReceived);
+  }
+
+  [TestMethod]
+  public void OneWayMemoryMapTest()
+  {
+    const string ExpectedUserName = "Hello";
+
+    var server = new MemoryMappedTransport(MapName);
+    var client = new MemoryMappedTransport(MapName);
+
+    bool msgReceived = false;
+
+    server.StartListening<UserCreatedEvent>(evt =>
+    {
+      Assert.AreEqual(ExpectedUserName, evt.UserName);
+      msgReceived = true;
+    });
+
+    client.Send(new UserCreatedEvent { UserName = ExpectedUserName });
+
+    // Give it a moment
+    Task.Delay(5).Wait();
+    Assert.IsTrue(msgReceived);
   }
 
   [TestMethod]

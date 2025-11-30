@@ -140,3 +140,4 @@ Adds optional (one-way) IPC transport mechanisms for inter-process communication
 * Refactor `IEventTransport` to`IIpcEvent` for clarity.
 * Refactor `Transporter` namespace to `Ipc` or `IpcTransport` for clarity.
 * Refactor `IEventEnvelopeTransport` under `IpcReceipted` namespace for clarity.
+* Security: Named Pipes, MMF, and TCP should use proper ACLs / TLS / auth in production
