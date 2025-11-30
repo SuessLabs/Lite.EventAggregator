@@ -1,0 +1,127 @@
+
+name: Build, Test, Pack, Zip, and Publish
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
+
+
+jobs:
+  build-test-pack:
+    runs-on: windows-latest
+
+    env:
+      # Update to desired major.minor. This is the base version family.
+      BASE_VERSION: "1.1"
+
+    steps:
+      # 1. Checkout source
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # ensure tags/commits info is available when we expand logic later
+
+      # 2. Setup .NET SDK
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x' # Change to your target version
+
+      # 3. Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # 4. Build solution
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      # 5. Run tests
+      - name: Test
+        run: dotnet test --configuration Release --no-build --verbosity normal
+
+      # 6. Determin SemVersion package version
+      - name: Determine version
+        shell: pwsh
+        run: |
+          $branch     = "${{ github.ref_name }}"
+          $shortSha   = (git rev-parse --short HEAD)
+          $base       = "${{ env.BASE_VERSION }}"
+          $run        = "${{ github.run_number }}"
+
+          if ($branch -eq "master") {
+            # Stable versions on master
+            $version = "$base.$run"
+            $prerelease = ""
+          }
+          elseif ($branch -eq "develop") {
+            # Pre-release versions on develop
+            $version = "$base.$run-beta.$shortSha"
+            $prerelease = "beta.$shortSha"
+          }
+          else {
+            # Optional default for other branches
+            $version = "$base.$run-alpha.$shortSha"
+            $prerelease = "alpha.$shortSha"
+          }
+
+          "PACKAGE_VERSION=$version"   | Out-File -FilePath $env:GITHUB_ENV -Append
+          "VERSION_SUFFIX=$prerelease" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+          Write-Host "Calculated PACKAGE_VERSION=$version"
+          if ($prerelease) { Write-Host "Version suffix=$prerelease" }
+
+      # 7. Pack NuGet
+      - name: Pack NuGet
+        run: dotnet pack --configuration Release --no-build --output ./artifacts
+      #- name: Pack NuGet
+      #  shell: pwsh
+      #  run: |
+      #    $version = "${{ env.PACKAGE_VERSION }}"
+      #    dotnet pack `
+      #      --configuration Release `
+      #      --no-build `
+      #      /p:PackageVersion=$version `
+      #      /p:Version=$version `
+      #      /p:IncludeSymbols=true /p:SymbolPackageFormat=snupkg `
+      #      --output ./artifacts
+
+
+      # 8. Create ZIP of artifacts
+      - name: Create ZIP archive
+        run: |
+          mkdir ./zip
+          powershell Compress-Archive -Path ./artifacts/* -DestinationPath ./zip/artifacts.zip
+
+        #shell: pwsh
+        #run: |
+        #  New-Item -ItemType Directory -Force -Path ./zip | Out-Null
+        #  Compress-Archive -Path ./artifacts/* -DestinationPath ./zip/artifacts.zip
+
+      # 9. Upload ZIP as workflow artifact
+      - name: Upload ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package-zip
+          path: ./zip/artifacts.zip
+
+      ## 10) Publish to NuGet.org (master branch, push events only)
+      #- name: Publish to NuGet.org
+      #  if: github.ref_name == 'master' && github.event_name == 'push'
+      #  env:
+      #    NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+      #  shell: pwsh
+      #  run: |
+      #    # Push .nupkg first
+      #    dotnet nuget push "./artifacts/*.nupkg" `
+      #      --source "https://api.nuget.org/v3/index.json" `
+      #      --api-key "$env:NUGET_API_KEY" `
+      #      --skip-duplicate `
+      #      --no-symbols # push symbols separately
+      #
+      #    # Push symbols (.snupkg)
+      #    dotnet nuget push "./artifacts/*.snupkg" `
+      #      --source "https://api.nuget.org/v3/index.json" `
+      #      --api-key "$env:NUGET_API_KEY" `
+      #      --skip-duplicate
