@@ -34,7 +34,7 @@ public class EventAggregator : IEventAggregator
   private readonly ConcurrentDictionary<Type, List<IWeakAction>> _eventHandlers = new();
 
   /// <summary>Logger.</summary>
-  private readonly ILogger<EventAggregator> _logger;
+  private readonly ILogger<EventAggregator>? _logger;
 
   /// <summary>Pending receipted IPC requests.</summary>
   private readonly ConcurrentDictionary<string, PendingRequest> _pendingRequests = new();
@@ -55,6 +55,12 @@ public class EventAggregator : IEventAggregator
   /// <remarks>A local even can have a RequestAsync timeout, but not an IPC receipted transport.</remarks>
   private bool _usingIpcTransport = false;
 
+  public EventAggregator()
+  {
+    _logger = null;
+    ////_options = options?.Value ?? new LiteEventAggregatorOptions();
+  }
+
   public EventAggregator(ILogger<EventAggregator> logger)
   {
     _logger = logger;
@@ -64,7 +70,7 @@ public class EventAggregator : IEventAggregator
   /// <inheritdoc/>
   public void Publish<TEvent>(TEvent eventData)
   {
-    if (_logger.IsEnabled(LogLevel.Information))
+    if (_logger is not null && _logger.IsEnabled(LogLevel.Information))
       _logger.LogInformation("Publishing event {EventType}", typeof(TEvent).FullName);
 
     // Local dispatch
@@ -77,7 +83,7 @@ public class EventAggregator : IEventAggregator
   /// <inheritdoc/>
   public async Task PublishAsync<TEvent>(TEvent eventData, CancellationToken cancellationToken = default)
   {
-    if (_logger.IsEnabled(LogLevel.Information))
+    if (_logger is not null && _logger.IsEnabled(LogLevel.Information))
       _logger.LogInformation("Publishing async event {EventType}", typeof(TEvent).FullName);
 
     // Local dispatch
@@ -101,12 +107,19 @@ public class EventAggregator : IEventAggregator
   /// <remarks>Bi-directional transport only.</remarks>
   public async Task<TResponse> RequestAsync<TRequest, TResponse>(TRequest request, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
   {
+    if (request is null)
+      throw new ArgumentNullException(nameof(request));
+
     var effectiveTimeout = timeout; //// ?? _options.DefaultRequestTimeout;
     var correlationId = Guid.NewGuid().ToString("N");
-    if (_logger.IsEnabled(LogLevel.Information))
+
+    if (_logger is not null && _logger.IsEnabled(LogLevel.Information))
     {
-      _logger.LogInformation("Sending request {RequestType} with CorrelationId {CorrelationId} and timeout {Timeout}",
-        typeof(TRequest).FullName, correlationId, effectiveTimeout);
+      _logger.LogInformation(
+        "Sending request {RequestType} with CorrelationId {CorrelationId} and timeout {Timeout}",
+        typeof(TRequest).FullName,
+        correlationId,
+        effectiveTimeout);
     }
 
     // Try to find local event subscription handler first and exists
@@ -115,7 +128,7 @@ public class EventAggregator : IEventAggregator
     if (local is not null)
     {
       var r = await local.InvokeAsync(request).ConfigureAwait(false);
-      if (_logger.IsEnabled(LogLevel.Information))
+      if (_logger is not null && _logger.IsEnabled(LogLevel.Information))
         _logger.LogInformation("Request {CorrelationId} handled locally", correlationId);
 
       return (TResponse)r!;
@@ -165,7 +178,7 @@ public class EventAggregator : IEventAggregator
         //// pr.Payload.SetResult(pr);
         pr.Payload.TrySetException(new TimeoutException($"Request timed out after {timeout ?? _defaultTimeout}."));
 
-        if (_logger.IsEnabled(LogLevel.Warning))
+        if (_logger is not null && _logger.IsEnabled(LogLevel.Warning))
           _logger.LogWarning("Request {CorrelationId} timed out after {Timeout}", correlationId, effectiveTimeout);
       }
     }))
@@ -176,7 +189,7 @@ public class EventAggregator : IEventAggregator
 
       // TODO: (2025-11-28): Fix receipted timeout exception handling. It always fails to cast 'PendingRequest' to TResponse
       var obj = await pending.Payload.Task.ConfigureAwait(false);
-      if (_logger.IsEnabled(LogLevel.Information))
+      if (_logger is not null && _logger.IsEnabled(LogLevel.Information))
         _logger.LogInformation("Received response for {CorrelationId}", correlationId);
 
       return (TResponse)obj!;
@@ -190,7 +203,7 @@ public class EventAggregator : IEventAggregator
     list.Add(new WeakAction<TEvent>(handler));
 
     // Consider logging {Handler} `handler.Method.Name`
-    if (_logger.IsEnabled(LogLevel.Debug))
+    if (_logger is not null && _logger.IsEnabled(LogLevel.Debug))
       _logger.LogDebug("Subscribed handler for event type {EventType}", typeof(TEvent).FullName);
   }
 
@@ -200,7 +213,7 @@ public class EventAggregator : IEventAggregator
     var handlers = _requestHandlers.GetOrAdd(typeof(TRequest), _ => new List<IRequestHandler>());
     handlers.Add(new RequestHandler<TRequest, TResponse>(handler));
 
-    if (_logger.IsEnabled(LogLevel.Debug))
+    if (_logger is not null && _logger.IsEnabled(LogLevel.Debug))
       _logger.LogDebug("Subscribed request handler {RequestType} -> {ResponseType}", typeof(TRequest).FullName, typeof(TResponse).FullName);
   }
 
@@ -216,7 +229,7 @@ public class EventAggregator : IEventAggregator
           handlers.RemoveAt(i);
       }
 
-      if (_logger.IsEnabled(LogLevel.Debug))
+      if (_logger is not null && _logger.IsEnabled(LogLevel.Debug))
         _logger.LogDebug("Unsubscribed handler for event {EventType}", typeof(TEvent).FullName);
     }
   }
@@ -233,7 +246,7 @@ public class EventAggregator : IEventAggregator
           list.RemoveAt(i);
       }
 
-      if (_logger.IsEnabled(LogLevel.Debug))
+      if (_logger is not null && _logger.IsEnabled(LogLevel.Debug))
         _logger.LogDebug("Unsubscribed request handler {RequestType}", typeof(TRequest).FullName);
     }
   }
@@ -247,7 +260,7 @@ public class EventAggregator : IEventAggregator
     _usingIpcTransport = true;
     _ipcEnvelopeTransport = transport;
 
-    if (_logger.IsEnabled(LogLevel.Information))
+    if (_logger is not null && _logger.IsEnabled(LogLevel.Information))
       _logger.LogInformation("Starting IPC Envelope Transport {Transport} with Reply Address: {ReplyAddress}", transport.GetType().Name, transport.ReplyAddress);
 
     await _ipcEnvelopeTransport.StartAsync(OnTransportMessageAsync, cancellationToken);
@@ -262,7 +275,7 @@ public class EventAggregator : IEventAggregator
     _usingIpcTransport = true;
     _ipcTransport = transport;
 
-    if (_logger.IsEnabled(LogLevel.Information))
+    if (_logger is not null && _logger.IsEnabled(LogLevel.Information))
       _logger.LogInformation("Starting IPC Transport {Transport}", transport.GetType().Name);
   }
 
@@ -341,7 +354,7 @@ public class EventAggregator : IEventAggregator
     var eventType = Type.GetType(envelope.EventType, throwOnError: false);
     if (eventType is null)
     {
-      if (_logger.IsEnabled(LogLevel.Warning))
+      if (_logger is not null && _logger.IsEnabled(LogLevel.Warning))
         _logger.LogWarning("Unknown EventType received: {EventType}", envelope.EventType);
       return;
     }
@@ -355,14 +368,14 @@ public class EventAggregator : IEventAggregator
           var obj = JsonSerializer.Deserialize(envelope.PayloadJson, pr.ResponseType);
           pr.Payload.TrySetResult(obj);
 
-          if (_logger.IsEnabled(LogLevel.Debug))
+          if (_logger is not null && _logger.IsEnabled(LogLevel.Debug))
             _logger.LogDebug("Completed pending request {CorrelationId}", envelope.CorrelationId);
         }
         catch (Exception ex)
         {
           pr.Payload.TrySetException(ex);
 
-          if (_logger.IsEnabled(LogLevel.Error))
+          if (_logger is not null && _logger.IsEnabled(LogLevel.Error))
             _logger.LogError(ex, "Failed to deserialize response for {CorrelationId}", envelope.CorrelationId);
         }
       }
@@ -373,7 +386,7 @@ public class EventAggregator : IEventAggregator
     var payloadObj = JsonSerializer.Deserialize(envelope.PayloadJson, eventType);
     if (payloadObj is null)
     {
-      if (_logger.IsEnabled(LogLevel.Warning))
+      if (_logger is not null && _logger.IsEnabled(LogLevel.Warning))
         _logger.LogWarning("Null payload for {EventType}", envelope.EventType);
 
       return;
@@ -384,7 +397,7 @@ public class EventAggregator : IEventAggregator
       var handler = GetFirstRequestHandler(eventType);
       if (handler is null)
       {
-        if (_logger.IsEnabled(LogLevel.Warning))
+        if (_logger is not null && _logger.IsEnabled(LogLevel.Warning))
           _logger.LogWarning("No request handler registered for {EventType}", envelope.EventType);
 
         return;
@@ -408,7 +421,7 @@ public class EventAggregator : IEventAggregator
           PayloadJson = EventSerializer.Serialize(responseObj),
         };
 
-        if (_logger.IsEnabled(LogLevel.Debug))
+        if (_logger is not null && _logger.IsEnabled(LogLevel.Debug))
           _logger.LogDebug("Sending response for {CorrelationId}", envelope.CorrelationId);
 
         await _ipcEnvelopeTransport.SendAsync(responseEnvelope).ConfigureAwait(false);

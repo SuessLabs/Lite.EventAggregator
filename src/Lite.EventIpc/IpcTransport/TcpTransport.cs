@@ -56,7 +56,9 @@ public class TcpTransport : IEventTransport
 
           var buffer = new byte[4096];
           var bytesRead = stream.Read(buffer, 0, buffer.Length);
-          // if (bytesRead <= 0) continue;
+
+          if (bytesRead <= 0)
+            continue;
 
           var json = Encoding.UTF8.GetString(buffer, 0, bytesRead);
           var evt = EventSerializer.Deserialize<TEvent>(json);
