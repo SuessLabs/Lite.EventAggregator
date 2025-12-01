@@ -51,7 +51,7 @@ public class MemoryMappedTests : BaseTestClass
     await client.UseIpcEnvelopeTransportAsync(clientTransport);
 
     bool msgReceived = false;
-    ////server.SubscribeRequest<Ping, Pong>(async req =>
+    ////server.SubscribeRequest<Ping, Pong>(async (req) =>
     ////{
     ////  _logger?.LogInformation("Test Subscriber received Ping, returning Pong..");
     ////  msgReceived = true;
@@ -59,10 +59,11 @@ public class MemoryMappedTests : BaseTestClass
     ////  return new Pong(req.Message + MsgResponse);
     ////});
 
+    // TODO: We need to trigger a cancellation after sending this back, and set
+    //       that the transmission was a success
+    // TODO-2: Gotta return without using "Task.FromResult" that's lame!
     server.SubscribeRequest<Ping, Pong>(req =>
     {
-      // TODO: We need to trigger a cancellation after sending this back, and set
-      //       that the transmission was a success
       _logger?.LogInformation("Test Subscriber received Ping, returning Pong..");
       msgReceived = true;
       return Task.FromResult(new Pong(req.Message + MsgResponse));
