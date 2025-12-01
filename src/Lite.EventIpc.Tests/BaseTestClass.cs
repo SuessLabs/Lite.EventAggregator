@@ -2,6 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 
 namespace Lite.EventIpc.Tests;
 
@@ -23,11 +24,13 @@ public class BaseTestClass
     var factory = LoggerFactory.Create(config =>
     {
       //// config.AddConsole();
-      config.AddConsole(options =>
+      config.AddSimpleConsole(options =>
       {
-        options.TimestampFormat = "[HH:mm:ss.fff] ";
+        options.TimestampFormat = "HH:mm:ss.fff ";
         options.UseUtcTimestamp = false;
         options.IncludeScopes = true;
+        options.SingleLine = true;
+        options.ColorBehavior = LoggerColorBehavior.Enabled;
       });
       config.SetMinimumLevel(minimumLevel);
     });

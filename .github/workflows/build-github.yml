@@ -18,31 +18,31 @@ jobs:
 
     steps:
       # 1. Checkout source
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: 1. Checkout repository
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0  # ensure tags/commits info is available when we expand logic later
 
       # 2. Setup .NET SDK
-      - name: Setup .NET
+      - name: 2. Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x' # Change to your target version
 
       # 3. Restore dependencies
-      - name: Restore dependencies
+      - name: 3. Restore dependencies
         run: dotnet restore
 
       # 4. Build solution
-      - name: Build
+      - name: 4. Build
         run: dotnet build --configuration Release --no-restore
 
       # 5. Run tests
-      - name: Test
+      - name: 5. Test
         run: dotnet test --configuration Release --no-build --verbosity normal
 
       # 6. Determin SemVersion package version
-      - name: Determine version
+      - name: 6. Determine version
         shell: pwsh
         run: |
           $branch     = "${{ github.ref_name }}"
@@ -73,7 +73,7 @@ jobs:
           if ($prerelease) { Write-Host "Version suffix=$prerelease" }
 
       # 7. Pack NuGet
-      - name: Pack NuGet
+      - name: 7. Pack NuGet
         run: dotnet pack --configuration Release --no-build --output ./artifacts
       #- name: Pack NuGet
       #  shell: pwsh
@@ -89,7 +89,7 @@ jobs:
 
 
       # 8. Create ZIP of artifacts
-      - name: Create ZIP archive
+      - name: 8. Create ZIP archive
         run: |
           mkdir ./zip
           powershell Compress-Archive -Path ./artifacts/* -DestinationPath ./zip/artifacts.zip
@@ -100,7 +100,7 @@ jobs:
         #  Compress-Archive -Path ./artifacts/* -DestinationPath ./zip/artifacts.zip
 
       # 9. Upload ZIP as workflow artifact
-      - name: Upload ZIP
+      - name: 9. Upload ZIP
         uses: actions/upload-artifact@v4
         with:
           name: nuget-package-zip

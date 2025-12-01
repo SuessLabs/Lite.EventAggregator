@@ -5,6 +5,7 @@
     <BuildType Name="Release" />
   </Configurations>
   <Folder Name="/Solution Items/">
+    <File Path="../.github/workflows/build-github.yml" />
     <File Path="../LICENSE.md" />
     <File Path="../readme.md" />
     <File Path=".editorconfig" />
