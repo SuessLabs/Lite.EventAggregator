@@ -51,21 +51,29 @@ public class MemoryMappedTests : BaseTestClass
     await client.UseIpcEnvelopeTransportAsync(clientTransport);
 
     bool msgReceived = false;
-    server.SubscribeRequest<Ping, Pong>(async req =>
+    ////server.SubscribeRequest<Ping, Pong>(async req =>
+    ////{
+    ////  _logger?.LogInformation("Test Subscriber received Ping, returning Pong..");
+    ////  msgReceived = true;
+    ////  await Task.Yield();
+    ////  return new Pong(req.Message + MsgResponse);
+    ////});
+
+    server.SubscribeRequest<Ping, Pong>(req =>
     {
+      // TODO: We need to trigger a cancellation after sending this back, and set
+      //       that the transmission was a success
       _logger?.LogInformation("Test Subscriber received Ping, returning Pong..");
       msgReceived = true;
-      ////return Task.FromResult(new Pong(req.Message + PayloadResponse));
-      await Task.Yield();
-      return new Pong(req.Message + MsgResponse);
+      return Task.FromResult(new Pong(req.Message + MsgResponse));
     });
 
     _logger?.LogInformation("Test Sending Ping...");
     var resp = await client.RequestAsync<Ping, Pong>(
       new Ping(MsgRequest),
-      timeout: TimeSpan.FromMilliseconds(300_000));
+      timeout: TimeSpan.FromMilliseconds(3_000));
 
-    _logger?.LogInformation("Test Msg Received: {WasRcv}",  msgReceived);
+    _logger?.LogInformation("Test Msg Received: {WasRcv}", msgReceived);
     _logger?.LogInformation("Test Response is null: {IsNull}", resp is null ? "NULL" : "HasValue");
     Task.Delay(DefaultTimeout).Wait();
 

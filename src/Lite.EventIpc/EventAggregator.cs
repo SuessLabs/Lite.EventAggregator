@@ -176,16 +176,20 @@ public class EventAggregator : IEventAggregator
 
     using (effectiveCt.Register(() =>
     {
+      // TODO (2025-11-30) Need to determine if we 'canceled' with success or failed with Timeout
       if (_pendingRequests.TryRemove(correlationId, out var pr))
       {
         // TODO (2025-11-28): Fix receipted timeout exception handling. It always throws and fails to cast to TResponse
         ////pr.Payload.SetResult(pr);
-        ////pr.Payload.TrySetException(new TimeoutException($"Request timed out after {timeout ?? _defaultTimeout}."));
-
-        pr.Payload.SetResult(pr);
+        pr.Payload.TrySetException(new TimeoutException($"Request timed out after {timeout ?? _defaultTimeout}."));
 
         if (_logger is not null && _logger.IsEnabled(LogLevel.Warning))
           _logger.LogWarning("Request {CorrelationId} timed out after {Timeout}", correlationId, effectiveTimeout);
+      }
+      else
+      {
+        if (_logger is not null && _logger.IsEnabled(LogLevel.Warning))
+          _logger.LogWarning("Request {CorrelationId} not found and timed out after {Timeout}", correlationId, effectiveTimeout);
       }
     }))
     {
@@ -194,6 +198,7 @@ public class EventAggregator : IEventAggregator
         await _ipcEnvelopeTransport!.SendAsync(envelope, effectiveCt).ConfigureAwait(false);
 
       // TODO: (2025-11-28): Fix receipted timeout exception handling. It always fails to cast 'PendingRequest' to TResponse
+      // TODO: Wait for receiving
       var obj = await pending.Payload.Task.ConfigureAwait(false);
       ////object? obj = await pending.Payload.Task; ////.Task.ConfigureAwait(false);
       if (_logger is not null && _logger.IsEnabled(LogLevel.Information))
